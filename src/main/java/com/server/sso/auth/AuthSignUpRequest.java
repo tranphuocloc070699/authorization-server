@@ -1,14 +1,16 @@
 package com.server.sso.auth;
 
 import jakarta.validation.constraints.Min;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 
 import jakarta.validation.constraints.Pattern;
+
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuthSignUpRequest {
 
   @NotEmpty(message = "The email is required.")

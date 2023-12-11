@@ -17,9 +17,22 @@ public class AuthController {
     return "login";
   }
 
+  @GetMapping("/signup")
+  public String signupForm(Model model){
+    AuthSignUpRequest user = new AuthSignUpRequest();
+    model.addAttribute("user", user);
+    return "signup";
+  }
+
   @PostMapping("/users/save")
   public String saveUser(@Valid @ModelAttribute("user") AuthLogInRequest user){
     System.out.println(user);
-    return "dashboard";
+    return "login";
+  }
+
+  @PostMapping("/users/signup")
+  public String saveUser(@Valid @ModelAttribute("user") AuthSignUpRequest user){
+    System.out.println(user);
+    return "signup";
   }
 }
