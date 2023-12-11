@@ -17,12 +17,12 @@ public class SecurityConfiguration {
     httpSecurity.csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(
             auth -> auth
-                .requestMatchers("/login","/signup","/auth/**","/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/login/**","/login/*","/signup","/signup/save","/auth/**","/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest()
                 .authenticated()
         ).formLogin(form -> form
             .loginPage("/login")
-            .loginProcessingUrl("/login")
+            .loginProcessingUrl("/users/save")
             .defaultSuccessUrl("/dashboard")
             .permitAll())
         .sessionManagement(session ->

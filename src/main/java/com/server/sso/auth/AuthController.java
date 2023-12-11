@@ -3,6 +3,7 @@ package com.server.sso.auth;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,13 +26,19 @@ public class AuthController {
   }
 
   @PostMapping("/users/save")
-  public String saveUser(@Valid @ModelAttribute("user") AuthLogInRequest user){
+  public String saveUser(@Valid @ModelAttribute("user") AuthLogInRequest user,BindingResult result){
+    if (result.hasErrors()) {
+      return "login"; // Return back to the form with error messages
+    }
     System.out.println(user);
     return "login";
   }
 
-  @PostMapping("/users/signup")
-  public String saveUser(@Valid @ModelAttribute("user") AuthSignUpRequest user){
+  @PostMapping("/signup/save")
+  public String saveUser(@Valid @ModelAttribute("user") AuthSignUpRequest user, BindingResult result){
+    if (result.hasErrors()) {
+      return "signup"; // Return back to the form with error messages
+    }
     System.out.println(user);
     return "signup";
   }
