@@ -14,10 +14,20 @@ import java.util.Date;
 @NoArgsConstructor
 @SuperBuilder
 public class ResponseObject {
-  private Date timestamp = new Date();
+  private Date timestamp;
   private HttpStatus status;
   private Object data;
   private String message;
   private String path;
 
+  public ResponseObject(HttpStatus status, Object data, String message, String path) {
+    this.timestamp = new Date();
+    this.status = status;
+    this.data = data;
+    this.message = message;
+    this.path = path;
+
+    System.out.println(this.timestamp);
+    System.out.println("hello");
+  }
 }

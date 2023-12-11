@@ -27,6 +27,9 @@ public class User {
   @Column(nullable = false)
   private String name;
 
+  @Enumerated(EnumType.STRING)
+  private Provider provider;
+
   @CreationTimestamp
   @Column(name="created_at")
   private Date createdAt;

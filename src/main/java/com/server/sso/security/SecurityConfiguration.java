@@ -4,9 +4,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
@@ -14,18 +14,24 @@ public class SecurityConfiguration {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
-    httpSecurity
+    httpSecurity.csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(
-            auth -> auth
+            auth -> auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest()
                 .permitAll()
-        )
-        .csrf(AbstractHttpConfigurer::disable)
+        ).formLogin(form -> form
+            .loginPage("/login")
+            .loginProcessingUrl("/login")
+            .defaultSuccessUrl("/dashboard")
+            .permitAll())
         .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-
     return httpSecurity.build();
 
   }
+
+//  @Bean
+//  public WebSecurityCustomizer webSecurityCustomizer() {
+//    return (web) -> web.ignoring().requestMatchers("/auth/**");
+//  }
 }

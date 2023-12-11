@@ -19,8 +19,10 @@ import java.util.Map;
 @SuperBuilder
 public class AuthResponse extends ResponseObject {
   private String accessToken;
-  public AuthResponse(Date timestamp, HttpStatus status, Object data, String message, String path, String accessToken) {
-    super(timestamp, status, data, message, path);
+  public AuthResponse( HttpStatus status, Object data, String message, String path, String accessToken) {
+    super(status, data, message, path);
     this.accessToken = accessToken;
+
+    System.out.println("AuthResponse constructor");
   }
 }
