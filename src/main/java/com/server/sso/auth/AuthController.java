@@ -44,10 +44,11 @@ public class AuthController {
   }
 
   @GetMapping("/dashboard")
-  public String dashboard(Authentication authentication){
+  public String dashboard(Authentication authentication,Model model){
 
+model.addAttribute("name",authentication.getName()!=null ? authentication.getName() : "unknown");
 
-    return "Hello " + authentication.getName()!=null ? authentication.getName() : "unknown";
+    return "dashboard";
   }
 
   @PostMapping("/users/save")

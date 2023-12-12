@@ -63,7 +63,7 @@ public class SecurityConfiguration {
 //              }
               String redirectUrl = (String) request.getSession().getAttribute("redirectUrl");
 //              System.out.println("redirectUrl:" + redirectUrl);
-              if (!redirectUrl.isEmpty()) {
+              if (redirectUrl!=null) {
                 response.sendRedirect(redirectUrl);
               }else{
                 response.sendRedirect("/dashboard");
@@ -87,7 +87,7 @@ public class SecurityConfiguration {
 
                 .successHandler((request,response,authentication) ->{
                   String redirectUrl = (String) request.getSession().getAttribute("redirectUrl");
-                  if (!redirectUrl.isEmpty()) {
+                  if (redirectUrl!=null) {
                     response.sendRedirect(redirectUrl);
                   }
                 })

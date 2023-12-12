@@ -57,7 +57,6 @@ public class AuthService {
   /* === Authenticate Route === */
   public ResponseEntity<AuthResponse> authenticate(HttpServletRequest request,
                                                    HttpServletResponse response) {
-
     return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
         .status(HttpStatus.OK)
         .data(null)
