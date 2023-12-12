@@ -1,50 +1,24 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <meta
-            name="viewport"
-            content="width=device-width,initial-scale=1.0, minimum-scale=1.0"
-    />
-    <title>SSO</title>
+    <title>Please Log In</title>
 </head>
 <body>
-<form
-        method="post"
-        th:action="@{/users/save}"
-        class="form-horizontal"
-        role="form"
-        th:object="${user}"
->
-    <div class="mb-3">
-        <label for="email" class="control-label">Email *</label>
-        <input type="text"
-               id="email"
-               name="email"
-               th:field="*{email}"
-               class="form-control"
-               placeholder="Email"
-        />
+<h1>Please Log In</h1>
+<!--th:action="${redirectUrl} ? @{/login?redirectUrl=} + ${redirectUrl} : @{/login}"-->
+<form th:action="@{/login}" method="post">
+    <div th:if="${param.error}">
+        <p class="alert alert-danger" th:text="${session.loginError}"></p>
     </div>
-
-    <div class="mb-3">
-        <label for="password" class="control-label">Password *</label>
-        <input type="password"
-               id="password"
-               name="password"
-               th:field="*{password}"
-               class="form-control"
-               placeholder="Password"
-        />
+    <input type="text" name="redirectUrl" th:value="${redirectUrl}" />
+    <div>
+        <input type="text" name="username" placeholder="Username"/>
     </div>
-
-    <div class="mb-3">
-        <button type="submit" class="btn btn-primary">Login</button>
-<!--        <span> Not registered?-->
-<!--            <a th:href="@{/register}"> Register/SignUp Here</a>-->
-<!--        </span>-->
+    <div>
+        <input type="password" name="password" placeholder="Password"/>
     </div>
+    <input type="submit" value="Log in" />
+    <a th:href="@{/oauth2/authorization/google}">Login with Google</a>
 </form>
 </body>
 </html>
