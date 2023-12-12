@@ -1,6 +1,7 @@
 package com.server.sso.auth;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -10,6 +11,7 @@ import java.util.Date;
 @Table
 @Entity(name = "users")
 @Data
+@Builder
 public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -29,6 +31,9 @@ public class User {
 
   @Enumerated(EnumType.STRING)
   private Provider provider;
+
+  @Enumerated(EnumType.STRING)
+  private Role role;
 
   @CreationTimestamp
   @Column(name="created_at")

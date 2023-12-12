@@ -45,7 +45,8 @@ public class SecurityConfiguration {
         .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(
             auth -> auth.requestMatchers("/oauth2/**","/login/**", "/login/*",
-                "/signup", "/signup/save",
+                "/signup/**",
+                "/users/**",
                 "/auth/**",
                 "/swagger" + "-ui/**", "/v3" + "/api" + "-docs/**")
                 .permitAll()
@@ -127,6 +128,9 @@ public class SecurityConfiguration {
       }
     };
   }
+
+
+
   @Bean
   public AuthenticationProvider authenticationProvider() {
     DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
