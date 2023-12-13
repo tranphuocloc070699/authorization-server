@@ -1,10 +1,15 @@
 package com.server.sso.auth;
 
+import com.server.sso.exception.ConflictException;
+import com.server.sso.security.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -12,6 +17,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,92 +26,36 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.security.Principal;
 import java.util.Collections;
+import java.util.List;
 
 @Controller("")
 @RequiredArgsConstructor
 public class AuthController {
 
-//  @GetMapping("/login")
-//  public String loginForm(Model model){
-//    AuthLogInRequest user = new AuthLogInRequest();
-//    model.addAttribute("user", user);
-//    return "login";
-//  }
+  private final AuthService authService;
 
-  private final UserDataAccess userDataAccess;
-  private final PasswordEncoder passwordEncoder;
 
   @GetMapping("/login")
-  public String login(@Param("redirectUrl") String redirectUrl, Model model, HttpSession session) {
-    if (redirectUrl != null) {
-      session.setAttribute("redirectUrl", redirectUrl);
-//      model.addAttribute("redirectUrl",redirectUrl);
-    }
-    return "login";
-  }
-
-  @GetMapping("/logout")
-  public String logout() {
-    return "logout";
+  public String loginForm(@Param("redirectUrl") String redirectUrl, Model model, HttpSession session, Principal principal,
+                       Authentication authentication) {
+    return authService.loginView(authentication,session,redirectUrl);
   }
 
   @GetMapping("/signup")
-  public String signupForm(Model model) {
-    AuthSignUpRequest user = new AuthSignUpRequest();
-    model.addAttribute("user", user);
-    return "signup";
+  public String signupForm(Model model,Authentication authentication) {
+   return authService.signupView(authentication,model);
   }
 
   @GetMapping("/dashboard")
   public String dashboard(Authentication authentication, Model model) {
-
-    model.addAttribute("name", authentication.getName() != null ? authentication.getName() : "unknown");
-
-    return "dashboard";
+    return authService.dashboardView(authentication,model);
   }
-
-//  @PostMapping("/users/save")
-//  public String saveUser( @ModelAttribute("user") AuthLogInRequest user,BindingResult result){
-//    if (result.hasErrors()) {
-//      return "login"; // Return back to the form with error messages
-//    }
-//    System.out.println("user: " + user);
-//    return "dashboard";
-//  }
-
-
   @PostMapping("/users/save")
-  public String saveUser(@Valid @ModelAttribute("user") AuthSignUpRequest user, BindingResult result) {
-    if (result.hasErrors()) {
-      return "signup"; // Return back to the form with error messages
-    }
-
-    String passwordEncoded = passwordEncoder.encode(user.getPassword());
-    User newUser = User.builder()
-        .email(user.getEmail())
-        .role(Role.USER)
-        .provider(Provider.LOCAL)
-        .name(user.getName())
-        .password(passwordEncoded)
-        .build();
-
-    userDataAccess.save(newUser);
-
-    if (SecurityContextHolder.getContext().getAuthentication() == null) {
-      GrantedAuthority userAuthority = new SimpleGrantedAuthority(Role.USER.name());
-      org.springframework.security.core.userdetails.User userDetails = new org.springframework.security.core.userdetails.User(
-          user.getEmail(), passwordEncoded,
-          Collections.singleton(userAuthority));
-      UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-          userDetails,
-          null,
-          userDetails.getAuthorities()
-      );
-      SecurityContextHolder.getContext().setAuthentication(authToken);
-    }
-
-
-    return "redirect:/dashboard";
+  public String saveUser(@Valid @ModelAttribute("user") AuthSignUpRequest user, BindingResult result,
+                         Authentication authentication, HttpSession httpSession, HttpServletRequest request,
+                         HttpServletResponse response) {
+    return authService.signup(authentication,request,response,httpSession,result,user);
   }
 }

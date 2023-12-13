@@ -1,30 +1,33 @@
 package com.server.sso.security;
 
+import com.server.sso.auth.AuthSignUpRequest;
+import com.server.sso.auth.User;
+import com.server.sso.shared.Constant;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.security.Principal;
+import java.util.*;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService {
 
-  @Value("${application.security.jwt.secret-key}")
-  private  String secretKey;
-
-  @Value("${application.security.jwt.expiration}")
-  private  long jwtExpiration;
-
-  @Value("${application.security.jwt.refresh-token.expiration}")
-  private  long refreshExpiration;
+  private final Constant CONST;
 
   public String extractUsername(String token) {
     return extractClaim(token, Claims::getSubject);
@@ -43,13 +46,13 @@ public class JwtService {
       Map<String, Object> extraClaims,
       UserDetails userDetails
   ) {
-    return buildToken(extraClaims, userDetails, jwtExpiration);
+    return buildToken(extraClaims, userDetails, CONST.JWT_ACCESS_TOKEN_EXPIRE);
   }
 
   public String generateRefreshToken(
       UserDetails userDetails
   ) {
-    return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+    return buildToken(new HashMap<>(), userDetails, CONST.JWT_REFRESH_TOKEN_EXPIRE);
   }
 
   private String buildToken(
@@ -82,13 +85,39 @@ public class JwtService {
   }
 
   private Claims extractAllClaims(String token) {
-    SecretKey secret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+    SecretKey secret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(CONST.JWT_SECRET_KEY));
     return Jwts.parser().verifyWith(secret).build().parseClaimsJws(token).getBody();
 
   }
 
   private Key getSignInKey() {
-    byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+    byte[] keyBytes = Decoders.BASE64.decode(CONST.JWT_SECRET_KEY);
     return Keys.hmacShaKeyFor(keyBytes);
+  }
+
+  public void writeCookie(User user, HttpServletResponse response) {
+    String refreshToken = generateRefreshToken(user);
+    Cookie cookie = new Cookie(CONST.JWT_REFRESH_TOKEN_NAME, refreshToken);
+    cookie.setMaxAge(CONST.JWT_REFRESH_TOKEN_EXPIRE);
+    cookie.setSecure(false);
+    cookie.setHttpOnly(true);
+    cookie.setPath("/");
+    response.addCookie(cookie);
+  }
+
+  public void removeCookie(String cookieName, HttpServletResponse response) {
+    Cookie cookie = new Cookie(cookieName, null);
+    cookie.setMaxAge(0);
+    cookie.setSecure(false);
+    cookie.setHttpOnly(true);
+    cookie.setPath("/");
+    response.addCookie(cookie);
+  }
+
+  public Optional<String> readServletCookie(HttpServletRequest request, String name) {
+    return Arrays.stream(request.getCookies())
+        .filter(cookie -> name.equals(cookie.getName()))
+        .map(Cookie::getValue)
+        .findAny();
   }
 }

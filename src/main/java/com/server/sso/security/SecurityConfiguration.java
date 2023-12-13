@@ -1,35 +1,22 @@
 package com.server.sso.security;
 
+import com.server.sso.security.filters.JwtAuthenticationFilter;
+import com.server.sso.shared.Constant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -37,14 +24,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
-
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final JwtService jwtService;
+  private final Constant CONST;
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
     httpSecurity
         .csrf(AbstractHttpConfigurer::disable)
         .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(
-            auth -> auth.requestMatchers("/oauth2/**","/login/**", "/login/*",
+            auth -> auth.requestMatchers("/oauth2/**", "/login/**",
                 "/signup/**",
                 "/users/**",
                 "/auth/**",
@@ -52,23 +41,14 @@ public class SecurityConfiguration {
                 .permitAll()
                 .anyRequest()
                 .authenticated())
+
         .formLogin(form -> form
             .loginPage("/login")
             .loginProcessingUrl("/login")
             .permitAll()
             .successHandler(((request, response, authentication) -> {
-//              if(!request.getParameter("redirectUrl").isEmpty()){
-//                response.sendRedirect(request.getParameter("redirectUrl"));
-//              }else{
-//                response.sendRedirect("/dashboard");
-//              }
               String redirectUrl = (String) request.getSession().getAttribute("redirectUrl");
-//              System.out.println("redirectUrl:" + redirectUrl);
-              if (redirectUrl!=null) {
-                response.sendRedirect(redirectUrl);
-              }else{
-                response.sendRedirect("/dashboard");
-              }
+              response.sendRedirect(redirectUrl != null ? redirectUrl : "/dashboard");
             }))
             .failureHandler((request, response, exception) -> {
               Map<String, String[]> parameterMap = request.getParameterMap();
@@ -81,25 +61,31 @@ public class SecurityConfiguration {
               request.getSession().setAttribute("loginError", exception.getMessage());
               response.sendRedirect(request.getContextPath() + "/login?error");
             }))
+        .logout(logoutForm -> logoutForm
+            .logoutUrl("/logout")
+            .logoutSuccessHandler((request, response, authentication) ->{
+              Optional<String> refreshTokenOptional = jwtService.readServletCookie(request,CONST.JWT_REFRESH_TOKEN_NAME);
+              if(refreshTokenOptional.isPresent()){
+                jwtService.removeCookie(CONST.JWT_REFRESH_TOKEN_NAME,response);
+              }
+              response.sendRedirect("/login");
+        }))
         .oauth2Login(oauth2Login ->
             oauth2Login
                 .loginPage("/login")
                 .loginProcessingUrl("/login/oauth2/code/google")
-
                 .successHandler((request,response,authentication) ->{
                   String redirectUrl = (String) request.getSession().getAttribute("redirectUrl");
-                  if (redirectUrl!=null) {
-                    response.sendRedirect(redirectUrl);
-                  }
+                  System.out.println(authentication);
+                  response.sendRedirect(redirectUrl != null ? redirectUrl : "/dashboard");
                 })
                 .failureHandler((request, response, exception) -> {
                   request.getSession().setAttribute("loginError", exception.getMessage());
-                  System.err.println("Oauth2 login error: " + exception.getMessage() );
+                  System.err.println("Oauth2 login fail: " + exception.getMessage());
                   response.sendRedirect("/login?error");
                 })
-        );
-//        .sessionManagement(session ->
-//                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        )
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     return httpSecurity.build();
   }
 
@@ -117,35 +103,7 @@ public class SecurityConfiguration {
   }
 
 
-  @Bean
-//  @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
-  public UserDetailsService userDetailsService() {
-    return new UserDetailsService() {
-      @Override
-      public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        GrantedAuthority userAuthority = new SimpleGrantedAuthority("ROLE_USER");
-        return new User(username,passwordEncoder().encode("123"), Collections.singleton(userAuthority));
-      }
-    };
-  }
 
-
-
-  @Bean
-  public AuthenticationProvider authenticationProvider() {
-    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-    authProvider.setUserDetailsService(userDetailsService());
-    authProvider.setPasswordEncoder(passwordEncoder());
-    return authProvider;
-  }
-  @Bean
-  public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-    return config.getAuthenticationManager();
-  }
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder(10, new SecureRandom());
-  }
 
 //  @Bean
 //  public WebSecurityCustomizer webSecurityCustomizer() {

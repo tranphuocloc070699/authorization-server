@@ -13,17 +13,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthRestController {
 
   private final AuthService authService;
-  @PostMapping("signup")
-  public ResponseEntity<AuthResponse> signup(@Valid @RequestBody AuthSignUpRequest requestUser
-                                    ){
-    return authService.signup(requestUser);
-  }
-
-  @PostMapping("login")
-  public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthLogInRequest requestUser,
-                                            HttpServletResponse response){
-  return authService.login(requestUser,response);
-  }
 
   @GetMapping("authenticate")
   public ResponseEntity<AuthResponse> authenticate(HttpServletRequest request, HttpServletResponse response){
