@@ -2,6 +2,7 @@ package com.server.sso.auth;
 
 import com.server.sso.exception.customs.ForbiddenException;
 import com.server.sso.exception.customs.UnAuthenticateException;
+import com.server.sso.redis.RedisRepository;
 import com.server.sso.security.JwtService;
 import com.server.sso.shared.AuthResponseException;
 import com.server.sso.shared.Constant;
@@ -35,6 +36,7 @@ public class AuthService {
   private final UserDataAccess userDataAccess;
   private final JwtService jwtService;
   private final PasswordEncoder passwordEncoder;
+  private final RedisRepository redisRepository;
   private final Constant CONST;
   /* === Authenticate Route === */
   public ResponseEntity<AuthResponse> authenticate(HttpServletRequest request,
@@ -111,7 +113,7 @@ public class AuthService {
           .name(user.getName())
           .password(passwordEncoded)
           .build();
-      userDataAccess.save(newUser);
+      User userSaved = userDataAccess.save(newUser);
       if (authentication == null) {
         GrantedAuthority userAuthority = new SimpleGrantedAuthority(Role.USER.name());
         List<GrantedAuthority> authorities = Collections.singletonList(userAuthority);
@@ -125,6 +127,15 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authToken);
         httpSession.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
             SecurityContextHolder.getContext());
+
+        RedisUser redisUser = RedisUser.builder()
+            .id(userSaved.getId())
+            .name(userSaved.getName())
+            .email(userSaved.getEmail())
+            .createdAt(userSaved.getCreatedAt())
+            .updatedAt(userSaved.getUpdatedAt())
+            .build();
+        redisRepository.save(redisUser);
         jwtService.writeCookie(newUser, response);
       }
       return "redirect:/dashboard";
