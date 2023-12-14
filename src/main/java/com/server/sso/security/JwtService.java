@@ -1,7 +1,5 @@
 package com.server.sso.security;
 
-import com.server.sso.auth.AuthSignUpRequest;
-import com.server.sso.auth.User;
 import com.server.sso.shared.Constant;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -9,17 +7,12 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
-import java.security.Principal;
 import java.util.*;
 import java.util.function.Function;
 
@@ -38,32 +31,35 @@ public class JwtService {
     return claimsResolver.apply(claims);
   }
 
-  public String generateToken(UserDetails userDetails) {
-    return generateToken(new HashMap<>(), userDetails);
+  public String generateToken(String subject) {
+    return generateToken(new HashMap<>(), subject);
   }
 
   public String generateToken(
       Map<String, Object> extraClaims,
-      UserDetails userDetails
+      String subject
   ) {
-    return buildToken(extraClaims, userDetails, CONST.JWT_ACCESS_TOKEN_EXPIRE);
+    return buildToken(extraClaims, subject, CONST.JWT_ACCESS_TOKEN_EXPIRE);
   }
 
   public String generateRefreshToken(
-      UserDetails userDetails
+      Integer refreshTokenVersion,
+      String subject
   ) {
-    return buildToken(new HashMap<>(), userDetails, CONST.JWT_REFRESH_TOKEN_EXPIRE);
+    Map<String,Object> map = new HashMap<>();
+    map.put("refreshTokenVersion",refreshTokenVersion);
+    return buildToken(map, subject, CONST.JWT_REFRESH_TOKEN_EXPIRE);
   }
 
   private String buildToken(
       Map<String, Object> extraClaims,
-      UserDetails userDetails,
+      String subject,
       long expiration
   ) {
     return Jwts
         .builder()
         .setClaims(extraClaims)
-        .setSubject(userDetails.getUsername())
+        .setSubject(subject)
         .setIssuedAt(new Date(System.currentTimeMillis()))
         .setExpiration(new Date(System.currentTimeMillis() + expiration))
         .signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -95,8 +91,8 @@ public class JwtService {
     return Keys.hmacShaKeyFor(keyBytes);
   }
 
-  public void writeCookie(User user, HttpServletResponse response) {
-    String refreshToken = generateRefreshToken(user);
+  public void writeCookie(Integer refreshTokenVersion,String subject, HttpServletResponse response) {
+    String refreshToken = generateRefreshToken(refreshTokenVersion,subject);
     Cookie cookie = new Cookie(CONST.JWT_REFRESH_TOKEN_NAME, refreshToken);
     cookie.setMaxAge(CONST.JWT_REFRESH_TOKEN_EXPIRE);
     cookie.setSecure(false);

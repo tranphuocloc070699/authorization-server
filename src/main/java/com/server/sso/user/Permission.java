@@ -1,4 +1,4 @@
-package com.server.sso.auth;
+package com.server.sso.user;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.server.sso.auth;
+package com.server.sso.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

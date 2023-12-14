@@ -1,4 +1,4 @@
-package com.server.sso.auth;
+package com.server.sso.user;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.server.sso.auth.Permission.*;
+import static com.server.sso.user.Permission.*;
 
 @RequiredArgsConstructor
 public enum Role {

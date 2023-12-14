@@ -18,4 +18,9 @@ public class AuthRestController {
   public ResponseEntity<AuthResponse> authenticate(HttpServletRequest request, HttpServletResponse response){
     return authService.authenticate(request,response);
   }
+
+  @GetMapping("profile")
+  public ResponseEntity<AuthResponse> getProfile(HttpServletRequest request, HttpServletResponse response){
+    return authService.getProfile(request,response);
+  }
 }

@@ -2,14 +2,21 @@ package com.server.sso.auth;
 
 import com.server.sso.exception.customs.ForbiddenException;
 import com.server.sso.exception.customs.UnAuthenticateException;
-import com.server.sso.redis.RedisRepository;
+import com.server.sso.redis.RedisDataAccess;
+import com.server.sso.redis.RedisUser;
 import com.server.sso.security.JwtService;
 import com.server.sso.shared.AuthResponseException;
 import com.server.sso.shared.Constant;
+import com.server.sso.user.Provider;
+import com.server.sso.user.Role;
+import com.server.sso.user.User;
+import com.server.sso.user.UserDataAccess;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,8 +24,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Service;
@@ -36,8 +44,8 @@ public class AuthService {
   private final UserDataAccess userDataAccess;
   private final JwtService jwtService;
   private final PasswordEncoder passwordEncoder;
-  private final RedisRepository redisRepository;
   private final Constant CONST;
+  private final RedisDataAccess redisDataAccess;
   /* === Authenticate Route === */
   public ResponseEntity<AuthResponse> authenticate(HttpServletRequest request,
                                                    HttpServletResponse response) {
@@ -48,24 +56,44 @@ public class AuthService {
       String userEmail = jwtService.extractUsername(refreshToken);
       if (userEmail == null) throw new UnAuthenticateException("Cannot extract username from this token");
 
-      Optional<User> userExisting = userDataAccess.findByEmail(userEmail);
-      if (userExisting.isEmpty()) throw new UnAuthenticateException("User with email [" + userEmail + "] not found");
+      /*Validate from redis db*/
+      Integer refreshTokenVersion = jwtService.extractClaim(refreshToken,claims -> claims.get("refreshTokenVersion",Integer.class));
+      RedisUser redisUserExisted = redisDataAccess.findRedisUserByEmail(userEmail);
+      if(redisUserExisted==null) throw new UnAuthenticateException("[Redis] User with email [\" + userEmail + \"] not found\"");
+      if(refreshTokenVersion==null || !refreshTokenVersion.equals(redisUserExisted.getRefreshTokenVersion())) throw new UnAuthenticateException("[Redis] refresh token not match");
 
+      /*Validate user existing in db*/
+      Optional<User> userExisting = userDataAccess.findByEmail(userEmail);
+      if (userExisting.isEmpty()) throw new UnAuthenticateException("[Database] User with email [" + userEmail + "] not found");
+
+      /*Validate token expire and user email match from token and db */
       boolean isTokenValid = jwtService.isTokenValid(refreshToken, userExisting.get());
       if(!isTokenValid) throw new UnAuthenticateException("Token invalid");
+
+      /*
+      All thing good.
+      increase cookie version
+      */
+      redisUserExisted.setRefreshTokenVersion(redisUserExisted.getRefreshTokenVersion()+1);
+      redisDataAccess.save(redisUserExisted);
+      jwtService.writeCookie(redisUserExisted.getRefreshTokenVersion(),userExisting.get().getEmail(), response);
 
       return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
           .status(HttpStatus.OK)
           .data(userExisting.get())
           .message("authenticated")
           .path(request.getServletPath())
-          .accessToken(jwtService.generateToken(userExisting.get()))
+          .accessToken(jwtService.generateToken(userExisting.get().getEmail()))
           .build());
-    } catch (ForbiddenException e) {
+    } catch (ForbiddenException  e) {
       return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.FORBIDDEN, e.getMessage());
     }
-    catch (UnAuthenticateException e) {
+    catch (UnAuthenticateException | JwtException e) {
       return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+    catch (RuntimeException e) {
+      System.err.println("[authenticate] internal server error :" + e.getMessage());
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
@@ -83,15 +111,19 @@ public class AuthService {
     if (authentication != null && authentication.isAuthenticated()) {
       return "redirect:/dashboard";
     }
-
     AuthSignUpRequest user = new AuthSignUpRequest();
     model.addAttribute("user", user);
     return "signup";
   }
-
   public String dashboardView(Authentication authentication, Model model) {
     if (authentication != null) {
-      model.addAttribute("name", authentication.getName() != null ? authentication.getName() : "unknown");
+      model.addAttribute("name", authentication.getName() != null ? getName(authentication) : "unknown");
+      if(authentication.getName()!=null){
+        RedisUser redisUser = redisDataAccess.findRedisUserByEmail(getName(authentication));
+        List<RedisUser> redisUserList = redisDataAccess.findAll();
+        model.addAttribute("userList",redisUserList);
+        model.addAttribute("user",redisUser);
+      }
     } else {
       model.addAttribute("name", "authentication null");
     }
@@ -112,6 +144,7 @@ public class AuthService {
           .provider(Provider.LOCAL)
           .name(user.getName())
           .password(passwordEncoded)
+
           .build();
       User userSaved = userDataAccess.save(newUser);
       if (authentication == null) {
@@ -132,16 +165,64 @@ public class AuthService {
             .id(userSaved.getId())
             .name(userSaved.getName())
             .email(userSaved.getEmail())
+            .provider(userSaved.getProvider())
+            .role(userSaved.getRole())
+            .refreshTokenVersion(0)
             .createdAt(userSaved.getCreatedAt())
             .updatedAt(userSaved.getUpdatedAt())
             .build();
-        redisRepository.save(redisUser);
-        jwtService.writeCookie(newUser, response);
+        redisDataAccess.save(redisUser);
+        jwtService.writeCookie(redisUser.getRefreshTokenVersion(),newUser.getEmail(), response);
       }
       return "redirect:/dashboard";
     } catch (RuntimeException e) {
       System.err.println("saveUser Exception :" + e.getMessage());
       throw new RuntimeException(e.getMessage());
+    }
+  }
+
+  private String getName(Authentication authentication) {
+    return Optional.of(authentication)
+        .filter(OAuth2AuthenticationToken.class::isInstance)
+        .map(OAuth2AuthenticationToken.class::cast)
+        .map(OAuth2AuthenticationToken::getPrincipal)
+        .map(OidcUser.class::cast)
+        .map(OidcUser::getEmail)
+        .orElseGet(authentication::getName);
+  }
+
+  public ResponseEntity<AuthResponse> getProfile(HttpServletRequest request, HttpServletResponse response) {
+    try{
+      final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+      final String jwt;
+      final String userEmail;
+      if(authHeader==null || !authHeader.startsWith("Bearer ")){
+        throw new ForbiddenException("token not found");
+      }
+      jwt = authHeader.substring(7);
+      userEmail = jwtService.extractUsername(jwt);
+      if(userEmail==null) throw new UnAuthenticateException("Cannot extract email from token");
+
+      Optional<User> userOptional = userDataAccess.findByEmail(userEmail);
+      if(userOptional.isEmpty()) throw new UnAuthenticateException("User not found with this token");
+
+      return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
+          .status(HttpStatus.OK)
+          .data(userOptional.get())
+          .message("get profile successfully!")
+          .path(request.getServletPath())
+          .accessToken(jwtService.generateToken(userOptional.get().getEmail()))
+          .build());
+    }
+    catch (ForbiddenException  e) {
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.FORBIDDEN, e.getMessage());
+    }
+    catch (UnAuthenticateException | JwtException e) {
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+    catch (RuntimeException e) {
+      System.err.println("[authenticate] internal server error :" + e.getMessage());
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 }
