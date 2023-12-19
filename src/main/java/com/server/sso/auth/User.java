@@ -23,7 +23,6 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@RedisHash("User")
 public class User implements UserDetails {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -43,6 +42,12 @@ public class User implements UserDetails {
 
   @Enumerated(EnumType.STRING)
   private Role role;
+
+  @Column(columnDefinition = "BOOLEAN DEFAULT false")
+  private boolean isUsing2FA;
+
+  @Column
+  private String secret;
 
   @CreationTimestamp
   @Column(name="created_at")

@@ -58,4 +58,6 @@ public class AuthController {
                          HttpServletResponse response) {
     return authService.signup(authentication,request,response,httpSession,result,user);
   }
+
+
 }

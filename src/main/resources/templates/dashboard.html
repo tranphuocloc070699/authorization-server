@@ -1,15 +1,50 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta
-            name="viewport"
-            content="width=device-width,initial-scale=1.0, minimum-scale=1.0"
+      name="viewport"
+      content="width=device-width,initial-scale=1.0, minimum-scale=1.0"
     />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
+    />
+    <script
+      type="text/javascript"
+      th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"
+    ></script>
+    <script
+      type="text/javascript"
+      th:src="@{/webjars/jquery/jquery.min.js}"
+    ></script>
     <title>Dashboard</title>
-</head>
-<body>
+  </head>
+  <body>
     <p th:text="${name}"></p>
-</body>
+    <p th:if="${isUse2FA==true}">Using 2FA</p>
+    <button th:unless="${isUse2FA==true}" id="toggle-2fa__btn">Using 2Fa</button>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        const url = "[[@{/auth/2fa}]]";
+        $("#toggle-2fa__btn").on("click", function () {
+            $.ajax({
+                url,
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    console.log(data);
+                },
+                error: function (error) {
+                    console.error('Error:', error);
+                }
+            });
+        });
+
+
+      });
+    </script>
+  </body>
 </html>
