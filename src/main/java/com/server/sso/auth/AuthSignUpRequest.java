@@ -1,6 +1,6 @@
 package com.server.sso.auth;
 
-import jakarta.validation.constraints.Min;
+import com.server.sso.user.Role;
 import lombok.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;

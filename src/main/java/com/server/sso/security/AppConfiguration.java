@@ -1,7 +1,7 @@
 package com.server.sso.security;
 
-import com.server.sso.auth.User;
-import com.server.sso.auth.UserDataAccess;
+import com.server.sso.user.User;
+import com.server.sso.user.UserDataAccess;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +14,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 import java.util.Optional;
@@ -37,7 +36,7 @@ public class AppConfiguration {
         if(userExisting.isPresent()){
           return new org.springframework.security.core.userdetails.User(username,userExisting.get().getPassword(), userExisting.get().getAuthorities());
         }
-        throw new UsernameNotFoundException("user with email "+username+" not found");
+        throw new UsernameNotFoundException("user with email ["+username+"] not found");
       }
     };
   }

@@ -1,6 +1,7 @@
-package com.server.sso.auth;
+package com.server.sso.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.server.sso.shared.RandomData;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,7 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.redis.core.RedisHash;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -44,7 +45,7 @@ public class User implements UserDetails {
   private Role role;
 
   @Column(columnDefinition = "BOOLEAN DEFAULT false")
-  private boolean isUsing2FA;
+  private Boolean isUsing2FA;
 
   @Column
   private String secret;
@@ -100,12 +101,14 @@ public class User implements UserDetails {
 
 //  @PrePersist
 //  protected void onCreate() {
-//    created = new Date();
+//    createdAt = new Date();
 //  }
 //
-//  @PreUpdate
-//  protected void onUpdate() {
-//    updated = new Date();
-//  }
+  @PreUpdate
+  protected void onUpdate() {
+    if (isUsing2FA) {
+      secret = RandomData.generateRandomBase32();
+    }
+  }
 
 }

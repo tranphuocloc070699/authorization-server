@@ -22,29 +22,62 @@
     ></script>
     <title>Dashboard</title>
   </head>
-  <body>
-    <p th:text="${name}"></p>
-    <p th:if="${isUse2FA==true}">Using 2FA</p>
-    <button th:unless="${isUse2FA==true}" id="toggle-2fa__btn">Using 2Fa</button>
-    <script type="text/javascript">
-      $(document).ready(function () {
+</html>
+</head>
+<body>
+<h2>Current User:</h2>
+<p th:text="${user}"></p>
+<br>
+<h2>User List:</h2>
+<!-- <ul>-->
+<!--    <li th:each="user : ${userList}">-->
+<!--        <p th:text="${user}"></p>-->
+<!--    </li>-->
+<!--</ul> -->
+<!--<p th:if="${isUse2FA==true}">Using 2FA</p>-->
+<button  id="toggle-2fa__btn">Test 2fa</button>
+<img id="qr-code" src="" alt="Girl in a jacket" >
+<br>
+<p id="mfa-code"></p>
+
+<div>--------------------------------------------</div>
+<input id="number-digits" placeholder="enter number" >
+<button id="verify__btn" >Verify</button>
+
+<script type="text/javascript">
+  $(document).ready(function () {
+  
+    $("#toggle-2fa__btn").on("click", function () {
         const url = "[[@{/auth/2fa}]]";
-        $("#toggle-2fa__btn").on("click", function () {
-            $.ajax({
-                url,
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-                    console.log(data);
-                },
-                error: function (error) {
-                    console.error('Error:', error);
+        $.ajax({
+            url,
+            type: 'GET',
+            dataType: 'json',
+            success: function (response) {
+                if(response.data.mfaCode && response.data.qrCode){
+                    $('#qr-code').attr('src', response.data.qrCode);
+                    $('#mfa-code').text(response.data.mfaCode);
                 }
-            });
+            },
+            error: function (error) {
+                console.error('Error:', error);
+            }
         });
+    });
 
+$("#verify__btn").on("click", function () {
+    console.log('1231231312');
+        const numberValue = $('#number-digits').val();
+        const url = "[[@{/auth/verify2fa}]]";
 
-      });
-    </script>
-  </body>
+        params = { numberValue};
+        $.post(url, params, function (response) {
+            console.log({response})
+          }).fail(function () {
+            console.error('can not connect to server')
+          });
+    });
+  });
+</script>
+</body>
 </html>

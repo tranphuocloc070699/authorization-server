@@ -26,8 +26,5 @@ public class ResponseObject {
     this.data = data;
     this.message = message;
     this.path = path;
-
-    System.out.println(this.timestamp);
-    System.out.println("hello");
   }
 }

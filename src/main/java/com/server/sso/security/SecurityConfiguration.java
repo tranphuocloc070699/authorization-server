@@ -1,6 +1,7 @@
 package com.server.sso.security;
 
 import com.server.sso.security.filters.JwtAuthenticationFilter;
+import com.server.sso.security.handlers.*;
 import com.server.sso.shared.Constant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +28,11 @@ public class SecurityConfiguration {
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final JwtService jwtService;
   private final Constant CONST;
+  private final UsernameAndPasswordLoginSuccessHandler usernameAndPasswordLoginSuccessHandler;
+  private final UsernameAndPasswordLoginFailureHandler usernameAndPasswordLoginFailureHandler;
+  private final UsernameAndPasswordLogoutSuccessHandler usernameAndPasswordLogoutSuccessHandler;
+  private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+  private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
     httpSecurity
@@ -46,44 +52,17 @@ public class SecurityConfiguration {
             .loginPage("/login")
             .loginProcessingUrl("/login")
             .permitAll()
-            .successHandler(((request, response, authentication) -> {
-              String redirectUrl = (String) request.getSession().getAttribute("redirectUrl");
-              response.sendRedirect(redirectUrl != null ? redirectUrl : "/dashboard");
-            }))
-            .failureHandler((request, response, exception) -> {
-              Map<String, String[]> parameterMap = request.getParameterMap();
-              String parameterString = parameterMap.entrySet()
-                  .stream()
-                  .map(entry -> entry.getKey() + "=" + Arrays.toString(entry.getValue()))
-                  .collect(Collectors.joining(", "));
-
-              System.err.println("Login failed. Parameters: " + parameterString);
-              request.getSession().setAttribute("loginError", exception.getMessage());
-              response.sendRedirect(request.getContextPath() + "/login?error");
-            }))
+            .successHandler(usernameAndPasswordLoginSuccessHandler)
+            .failureHandler(usernameAndPasswordLoginFailureHandler))
         .logout(logoutForm -> logoutForm
             .logoutUrl("/logout")
-            .logoutSuccessHandler((request, response, authentication) ->{
-              Optional<String> refreshTokenOptional = jwtService.readServletCookie(request,CONST.JWT_REFRESH_TOKEN_NAME);
-              if(refreshTokenOptional.isPresent()){
-                jwtService.removeCookie(CONST.JWT_REFRESH_TOKEN_NAME,response);
-              }
-              response.sendRedirect("/login");
-        }))
+            .logoutSuccessHandler(usernameAndPasswordLogoutSuccessHandler))
         .oauth2Login(oauth2Login ->
             oauth2Login
                 .loginPage("/login")
                 .loginProcessingUrl("/login/oauth2/code/google")
-                .successHandler((request,response,authentication) ->{
-                  String redirectUrl = (String) request.getSession().getAttribute("redirectUrl");
-                  System.out.println(authentication);
-                  response.sendRedirect(redirectUrl != null ? redirectUrl : "/dashboard");
-                })
-                .failureHandler((request, response, exception) -> {
-                  request.getSession().setAttribute("loginError", exception.getMessage());
-                  System.err.println("Oauth2 login fail: " + exception.getMessage());
-                  response.sendRedirect("/login?error");
-                })
+                .successHandler(oAuth2LoginSuccessHandler)
+                .failureHandler(oAuth2LoginFailureHandler)
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     return httpSecurity.build();

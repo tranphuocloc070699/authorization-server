@@ -1,6 +1,6 @@
 package com.server.sso.auth;
 
-import com.server.sso.exception.ConflictException;
+
 import com.server.sso.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,18 +38,18 @@ public class AuthController {
 
 
   @GetMapping("/login")
-  public String loginForm(@Param("redirectUrl") String redirectUrl, Model model, HttpSession session, Principal principal,
+  public String loginView(@Param("redirectUrl") String redirectUrl, Model model, HttpSession session, Principal principal,
                        Authentication authentication) {
     return authService.loginView(authentication,session,redirectUrl);
   }
 
   @GetMapping("/signup")
-  public String signupForm(Model model,Authentication authentication) {
+  public String signupView(Model model,Authentication authentication) {
    return authService.signupView(authentication,model);
   }
 
   @GetMapping("/dashboard")
-  public String dashboard(Authentication authentication, Model model) {
+  public String dashboardView(Authentication authentication, Model model) {
     return authService.dashboardView(authentication,model);
   }
   @PostMapping("/users/save")
