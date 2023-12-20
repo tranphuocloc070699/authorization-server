@@ -5,6 +5,7 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.server.sso.shared.RandomData;
+import com.server.sso.shared.TransferData;
 import com.warrenstrange.googleauth.GoogleAuthenticatorConfig;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
@@ -16,7 +17,6 @@ import dev.samstevens.totp.qr.QrGenerator;
 import dev.samstevens.totp.secret.SecretGenerator;
 import dev.samstevens.totp.util.Utils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -39,13 +39,24 @@ public class DefaultMFATokenManager implements MFATokenManager {
 
     @Override
     public byte[] generate(QrData qrData) throws QrGenerationException {
+//      try {
+//        // Example: Generating a simple QR code with ZXing library
+//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//        BitMatrix bitMatrix = new QRCodeWriter().encode(qrData.getSecret(), BarcodeFormat.QR_CODE, 200, 200);
+//        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
+//        return outputStream.toByteArray();
+//      } catch (WriterException | IOException e) {
+//        throw new QrGenerationException("Error generating QR code", e);
+//      }
       try {
-        // Example: Generating a simple QR code with ZXing library
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        BitMatrix bitMatrix = new QRCodeWriter().encode(qrData.getSecret(), BarcodeFormat.QR_CODE, 200, 200);
-        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
-        return outputStream.toByteArray();
-      } catch (WriterException | IOException e) {
+      QRCodeWriter writer = new QRCodeWriter();
+      String issuer = "MyApp";
+      String email = "user@example.com";
+      String secret = qrData.getSecret();
+      String otpAuthUri = "otpauth://totp/" + issuer + ":" + email + "?secret=" + secret + "&issuer=" + issuer;
+        BitMatrix  matrix = writer.encode(otpAuthUri, BarcodeFormat.QR_CODE, 300, 300);
+        return TransferData.bufferedImageToBytes(MatrixToImageWriter.toBufferedImage(matrix));
+      } catch (WriterException | IOException e ) {
         throw new QrGenerationException("Error generating QR code", e);
       }
     }
@@ -54,16 +65,16 @@ public class DefaultMFATokenManager implements MFATokenManager {
     @Override
     public boolean isValidCode(String code, String secret) {
       System.out.println("code:" + code);
-      GoogleAuthenticatorConfig config = new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
-          .setWindowSize(5) // Adjust the window size to a larger value, default is 3
-          .setTimeStepSizeInMillis(30000) // Default is 30 seconds, adjust as needed
-          .build();
-      GoogleAuthenticator gAuth = new GoogleAuthenticator(config);
+//      GoogleAuthenticatorConfig config = new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
+//          .setWindowSize(5) // Adjust the window size to a larger value, default is 3
+//          .setTimeStepSizeInMillis(30000) // Default is 30 seconds, adjust as needed
+//          .build();
+      GoogleAuthenticator gAuth = new GoogleAuthenticator();
       // Create a GoogleAuthenticatorKey using the user's secret key
       GoogleAuthenticatorKey key = new GoogleAuthenticatorKey.Builder(secret).build();
-
+      long allowedTimeDrift =  30 * 1000;
       // Verify the user-entered TOTP
-      boolean isCodeValid = gAuth.authorize(key.getKey(), Integer.parseInt(code));
+      boolean isCodeValid = gAuth.authorize(key.getKey(), Integer.parseInt(code),System.currentTimeMillis()+allowedTimeDrift);
 
       if (isCodeValid) {
         System.out.println("Verification successful");
@@ -86,7 +97,7 @@ public class DefaultMFATokenManager implements MFATokenManager {
         .issuer("SSO")
         .algorithm(HashingAlgorithm.SHA256)
         .digits(6)
-        .period(60)
+        .period(30)
         .build();
     return Utils.getDataUriForImage(
         qrGenerator.generate(data),

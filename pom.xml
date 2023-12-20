@@ -18,8 +18,10 @@
 		<jjwt.version>0.12.3</jjwt.version>
 	</properties>
 	<dependencies>
-		<!-- https://mvnrepository.com/artifact/dev.samstevens.totp/totp-spring-boot-starter -->
-		<!-- https://mvnrepository.com/artifact/com.warrenstrange/googleauth -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.warrenstrange</groupId>
 			<artifactId>googleauth</artifactId>

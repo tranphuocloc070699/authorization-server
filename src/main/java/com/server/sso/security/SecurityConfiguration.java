@@ -41,9 +41,11 @@ public class SecurityConfiguration {
         .authorizeHttpRequests(
             auth -> auth.requestMatchers("/oauth2/**", "/login/**",
                 "/signup/**",
+                "/verify-multi-factor/**",
                 "/users/**",
                 "/auth/**",
                 "/swagger" + "-ui/**", "/v3" + "/api" + "-docs/**")
+
                 .permitAll()
                 .anyRequest()
                 .authenticated())

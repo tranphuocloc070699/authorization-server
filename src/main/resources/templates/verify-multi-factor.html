@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta
+            name="viewport"
+            content="width=device-width,initial-scale=1.0, minimum-scale=1.0"
+    />
+    <link
+            rel="stylesheet"
+            type="text/css"
+            th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
+    />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+    <script
+            type="text/javascript"
+            th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"
+    ></script>
+    <script
+            type="text/javascript"
+            th:src="@{/webjars/jquery/jquery.min.js}"
+    ></script>
+    <title>Verify Multi Factor</title>
+</head>
+<body>
+<div class="otp-field mb-4">
+    <input type="number" />
+    <input type="number" disabled />
+    <input type="number" disabled />
+    <input type="number" disabled />
+    <input type="number" disabled />
+    <input type="number" disabled />
+</div>
+<p th:text="${verifyError}"></p>
+<form th:action="@{/verify-multi-factor}" method="post">
+    <input id="number-digits" name="numberDigits" placeholder="enter number" >
+    <button id="verify__btn" type="submit" >Verify</button>
+</form>
+<script type="text/javascript">
+<!--    $(document).ready(function () {-->
+<!--  $("#verify__btn").on("click", function () {-->
+<!--      console.log('1231231312');-->
+<!--          const numberValue = $('#number-digits').val();-->
+<!--          const url = "[[@{/auth/verify2fa}]]";-->
+
+<!--          params = { numberValue};-->
+<!--          $.post(url, params, function (response) {-->
+<!--              console.log({response})-->
+<!--            }).fail(function () {-->
+<!--              console.error('can not connect to server')-->
+<!--            });-->
+<!--      });-->
+<!--    });-->
+</script>
+</body>
+</html>

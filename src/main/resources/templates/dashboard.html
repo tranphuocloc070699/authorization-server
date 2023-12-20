@@ -12,6 +12,7 @@
       type="text/css"
       th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
     />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
     <script
       type="text/javascript"
       th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"
@@ -41,12 +42,20 @@
 <p id="mfa-code"></p>
 
 <div>--------------------------------------------</div>
+
+<!--<div class="otp-field mb-4">-->
+<!--  <input type="number" />-->
+<!--  <input type="number" disabled />-->
+<!--  <input type="number" disabled />-->
+<!--  <input type="number" disabled />-->
+<!--  <input type="number" disabled />-->
+<!--  <input type="number" disabled />-->
+<!--</div>-->
 <input id="number-digits" placeholder="enter number" >
 <button id="verify__btn" >Verify</button>
 
 <script type="text/javascript">
   $(document).ready(function () {
-  
     $("#toggle-2fa__btn").on("click", function () {
         const url = "[[@{/auth/2fa}]]";
         $.ajax({

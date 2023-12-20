@@ -7,8 +7,13 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -25,9 +30,32 @@ public class UsernameAndPasswordLoginSuccessHandler implements AuthenticationSuc
 
     RedisUser redisUser = redisDataAccess.findRedisUserByEmail(authentication.getName());
     if(redisUser==null){
+
+      UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+          null,
+          null
+      );
+      authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+      SecurityContextHolder.getContext().setAuthentication(authToken);
       /*When signup, redis user is already exist -> Call api notify new error*/
       System.err.println("Cannot read user from redis : " + redisUser.toString());
     }
+    if (redisUser.getIsUsing2FA()) {
+
+      UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+          authentication.getPrincipal(),
+          null
+      );
+      SecurityContextHolder.getContext().setAuthentication(authToken);
+      if (redirectUrl != null) {
+        response.sendRedirect("/verify-multi-factor?redirectUrl=" + redirectUrl);
+
+      }else{
+        response.sendRedirect("/verify-multi-factor");
+      }
+       return;
+    }
+
     redisUser.setRefreshTokenVersion(redisUser.getRefreshTokenVersion()+1);
     jwtService.writeCookie(redisUser.getRefreshTokenVersion(),authentication.getName(),response);
 

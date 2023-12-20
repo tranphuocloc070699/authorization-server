@@ -9,7 +9,7 @@ import com.server.sso.security.multiFactor.DefaultMFATokenManager;
 import com.server.sso.security.multiFactor.MfaTokenData;
 import com.server.sso.shared.AuthResponseException;
 import com.server.sso.shared.Constant;
-import com.server.sso.shared.RandomData;
+import com.server.sso.shared.ValidateData;
 import com.server.sso.user.Provider;
 import com.server.sso.user.Role;
 import com.server.sso.user.User;
@@ -17,7 +17,6 @@ import com.server.sso.user.UserDataAccess;
 
 import dev.samstevens.totp.exceptions.QrGenerationException;
 import io.jsonwebtoken.JwtException;
-import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -39,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -239,7 +239,6 @@ public class AuthService {
 
   public  Object test2Fa(Authentication authentication, Model model) {
     try {
-      System.out.println(authentication.getName());
       if(authentication==null || authentication.getName()==null) throw new ForbiddenException("authentication null");
       String userEmail = getName(authentication);
       if(userEmail==null) throw new UnAuthenticateException("Cannot extract userEmail ["+authentication.getName()+"] from " +
@@ -282,5 +281,45 @@ public class AuthService {
     return defaultMFATokenManager.verifyTotp(value,userExisting.get().getSecret()) ? "Verification successful" : "Verification " +
         "failed";
 
+  }
+
+  public String verifyMultiFactorView(Authentication authentication, Model model,String redirectUrl) {
+    return "verify-multi-factor";
+  }
+
+  public String verifyMultiFactor(Authentication authentication, Model model, HttpSession httpSession, String numberDigits,
+                                  HttpServletResponse response) throws IOException {
+    if(!ValidateData.isValidLong(numberDigits)){
+      model.addAttribute("verifyError","code invalid");
+      return "login";
+    }
+
+    String userEmail = getName(authentication);
+    if (userEmail == null || userEmail.isEmpty()) {
+      model.addAttribute("verifyError","userEmail not found from authentication");
+      return "login";
+    }
+
+    RedisUser redisUserExisted = redisDataAccess.findRedisUserByEmail(userEmail);
+    if(redisUserExisted==null) {
+      model.addAttribute("verifyError","Redis user not found with email: " + userEmail);
+      return "login";
+    }
+
+    if(redisUserExisted.getSecret()==null || redisUserExisted.getSecret().isEmpty()) {
+      model.addAttribute("verifyError","Redis user secret is null");
+      return "login";
+    }
+
+    if(!defaultMFATokenManager.verifyTotp(numberDigits,redisUserExisted.getSecret())){
+      model.addAttribute("verifyError","Code invalid or expired");
+      return "verify-multi-factor";
+    }
+
+    String redirectUrl = (String) httpSession.getAttribute("redirectUrl");
+
+
+
+    return redirectUrl == null ? "dashboard" : redirectUrl;
   }
 }

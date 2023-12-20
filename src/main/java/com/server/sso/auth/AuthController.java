@@ -25,7 +25,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
@@ -52,6 +54,24 @@ public class AuthController {
   public String dashboardView(Authentication authentication, Model model) {
     return authService.dashboardView(authentication,model);
   }
+
+  @GetMapping("/verify-multi-factor")
+  public String verifyMultiFactorView(Authentication authentication, Model model,@Param("redirectUrl") String redirectUrl) {
+    return authService.verifyMultiFactorView(authentication,model,redirectUrl);
+  }
+
+  @PostMapping("/verify-multi-factor")
+  public String verifyMultiFactor(Authentication authentication,Model model,HttpSession httpSession,
+                                  @RequestParam("numberDigits") String numberDigits,HttpServletResponse response) {
+
+    try {
+      return authService.verifyMultiFactor(authentication,model,httpSession,numberDigits,response);
+    } catch (IOException e) {
+      System.err.println("[AuthController - POST] verifyMultiFactor error: " + e.getMessage());
+      return "login";
+    }
+  }
+
   @PostMapping("/users/save")
   public String saveUser(@Valid @ModelAttribute("user") AuthSignUpRequest user, BindingResult result,
                          Authentication authentication, HttpSession httpSession, HttpServletRequest request,

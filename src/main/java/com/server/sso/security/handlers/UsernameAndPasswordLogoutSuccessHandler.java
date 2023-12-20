@@ -6,8 +6,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +29,13 @@ public class UsernameAndPasswordLogoutSuccessHandler implements LogoutSuccessHan
     Optional<String> refreshTokenOptional = jwtService.readServletCookie(request,CONST.JWT_REFRESH_TOKEN_NAME);
     if(refreshTokenOptional.isPresent()){
       jwtService.removeCookie(CONST.JWT_REFRESH_TOKEN_NAME,response);
+    }
+    if(SecurityContextHolder.getContext()!=null){
+      UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+          null,null
+      );
+      authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+      SecurityContextHolder.getContext().setAuthentication(authToken);
     }
     response.sendRedirect("/login");
   }
