@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Confirmation</title>
+</head>
+<body>
+<h1>Account Confirmation</h1>
+<p>Thank you for signing up! Please click the button below to confirm your account:</p>
+<a th:href="${confirmationLink}" class="confirmation-link">Confirm Account</a>
+</body>
+</html>
