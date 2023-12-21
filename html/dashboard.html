@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="../src/main/resources/static/fontawesome/all.css" />
-    
     <link rel="stylesheet" href="../src/main/resources/static/css/reset.css" />
     <link rel="stylesheet" href="../src/main/resources/static/css/styles.css" />
     <link rel="stylesheet" href="../src/main/resources/static/css/dashboard.css" />
-    <title>Signup Page</title>
+    <title>Dashboard Page</title>
   </head>
   <body>
     <div class="dashboard-wrapper">
@@ -55,8 +55,8 @@
                     <div class="dashboard-body-group-info-item">
                       <p class="dashboard-body-group-info-item-title">Multi Factor Authentication</p>
                       <div class="dashboard-body-group-info-item-content">
-                        <label class="switch" for="checkbox">
-                          <input type="checkbox" id="checkbox" checked />
+                        <label class="switch" for="multiFaCheckbox">
+                          <input type="checkbox" id="multiFaCheckbox" />
                           <div class="slider round"></div>
                         </label>
                       </div>
@@ -69,5 +69,96 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirm Modal -->
+    <div class="modal fade" id="confirmMultiFaModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title dashboard-modal-title" id="confirmMultiFaModalTitle">CONFIRMATION</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body dashboard-modal-body" id="confirmMultiFaModalBodyDisable">
+            <p class="dashboard-modal-body-title">Do you really want to disable multi factor authentication?</p>
+            <p class="dashboard-modal-body-notice">You need to scan QR code again when you enable this feature.</p>
+          </div>
+          <div class="modal-body dashboard-modal-body" id="confirmMultiFaModalBodyEnable">
+            <p class="dashboard-modal-body-title">Do you  want to enable multi factor authentication?</p>
+            <p class="dashboard-modal-body-notice">You have to download google authenticator on your mobile and scan the QR we will generate or enter the key below the QR</p>
+          </div>
+          <div class="modal-footer">
+            <button  data-bs-dismiss="modal" class="dashboard-modal-btn__close">Close</button>
+            <button class="dashboard-modal-btn__submit" id="toggleMultiFa">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Qr code Modal -->
+    <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title dashboard-modal-title">QR CODE</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body dashboard-modal-body block" >
+            <p class="dashboard-modal-body-title">Scan this QR or enter the key below QR image to your Google Authenticator App</p>
+            <img id="qrCodeImage" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTT1QnfIb9M01giB7nkKGCKhmGxGcE2kzzp_w&usqp=CAU" width="300" height="300"/>
+            <p class="dashboard-modal-body-notice center">Or enter this key</p>
+            <p id="qrCodeKey" class="dashboard-modal-body-title center" >ABCXYZ123456789</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      //qrCodeImage
+      //qrCodeKey
+
+      $(document).ready(function () {
+        //toggle mutil factor authentication 
+        $('#multiFaCheckbox').click(function (e) {
+          e.preventDefault();
+          const isChecked = !$('#multiFaCheckbox').prop('checked')
+          if(isChecked){
+            $('#confirmMultiFaModalBodyEnable').removeClass('block')
+            $('#confirmMultiFaModalTitle').removeClass('green')
+
+            $('#confirmMultiFaModalBodyDisable').addClass('block')
+            $('#confirmMultiFaModalTitle').addClass('red')
+          }else{
+            $('#confirmMultiFaModalBodyDisable').removeClass('block')
+            $('#confirmMultiFaModalTitle').removeClass('red')
+
+            $('#confirmMultiFaModalBodyEnable').addClass('block')
+            $('#confirmMultiFaModalTitle').addClass('green')
+          }
+          $('#confirmMultiFaModal').modal('show')
+        });
+
+        //button save changes clicked
+        $('#toggleMultiFa').click(function (e) {
+  
+
+          //Because before checkbox change , old value is opposite 
+          const isChecked = $('#multiFaCheckbox').prop('checked')
+          if(isChecked){
+            //Disable mutilFa
+
+          }else{
+            //Enable mutilFa
+
+            $('#qrModal').modal('show');
+          }
+          
+          $('#multiFaCheckbox').prop('checked',!isChecked);
+          $('#confirmMultiFaModal').modal('hide');
+            
+        });
+    });
+    </script>
   </body>
 </html>
+
+
+
+

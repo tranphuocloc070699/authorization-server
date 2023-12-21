@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.js"
+      integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="../src/main/resources/static/fontawesome/all.css"
+    />
+    <link rel="stylesheet" href="../src/main/resources/static/css/reset.css" />
+    <link rel="stylesheet" href="../src/main/resources/static/css/styles.css" />
+    <link
+      rel="stylesheet"
+      href="../src/main/resources/static/css/multi-fa-verifier.css"
+    />
+    <title>Dashboard Page</title>
+  </head>
+  <body>
+    <div
+      class="container height-100 d-flex justify-content-center align-items-center"
+    >
+      <div class="position-relative">
+        <div class="card p-2 text-center">
+          <h6>
+            Please enter the one time password <br />
+            to verify your account
+          </h6>
+          <div class="multi-fa-notice">
+            <p>A code has been generate from your Google Authenticator App</p>
+          </div>
+          <div
+            id="otp"
+            class="inputs d-flex flex-row justify-content-center mt-2"
+          >
+            <input
+              class="m-2 text-center form-control rounded"
+              type="text"
+              id="first"
+              maxlength="1"
+            />
+            <input
+              class="m-2 text-center form-control rounded"
+              type="text"
+              id="second"
+              maxlength="1"
+            />
+            <input
+              class="m-2 text-center form-control rounded"
+              type="text"
+              id="third"
+              maxlength="1"
+            />
+            <input
+              class="m-2 text-center form-control rounded"
+              type="text"
+              id="fourth"
+              maxlength="1"
+            />
+            <input
+              class="m-2 text-center form-control rounded"
+              type="text"
+              id="fifth"
+              maxlength="1"
+            />
+            <input
+              class="m-2 text-center form-control rounded"
+              type="text"
+              id="sixth"
+              maxlength="1"
+            />
+          </div>
+          <div class="mt-4 multi-fa-validate-fail">
+            Validation fail, check your code or contact to administrator if your code you typing match with your code on Google Authenticator App.
+          </div>
+          <div class="mt-4">
+            <button class="multi-fa-verifier-btn__submit" id="btn__submit">VERIFY</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+        $(document).ready(function (event) {
+        function OTPInput() {
+          const inputs = $("#otp > *[id]");
+          for (let i = 0; i < inputs.length; i++) {
+            $(inputs[i]).on("keydown", function (event) {
+            $('.multi-fa-validate-fail').removeClass('block');
+              if (event.key === "Backspace") {
+                inputs[i].value = "";
+                if (i !== 0) inputs[i - 1].focus();
+              } else {
+                if (i === inputs.length - 1 && inputs[i].value !== "") {
+                  return true;
+                } else if (event.keyCode > 47 && event.keyCode < 58) {
+                  inputs[i].value = event.key;
+                  if (i !== inputs.length - 1) inputs[i + 1].focus();
+                  event.preventDefault();
+                } else if (event.keyCode > 64 && event.keyCode < 91) {
+                  inputs[i].value = String.fromCharCode(event.keyCode);
+                  if (i !== inputs.length - 1) inputs[i + 1].focus();
+                  event.preventDefault();
+                }
+              }
+            });
+          }
+        }
+        OTPInput();
+
+        $('#btn__submit').click(function(e){
+            const first = $('#first').val();
+            const second = $('#second').val();
+            const third = $('#third').val();
+            const fourth = $('#fourth').val();
+            const fifth = $('#fifth').val();
+            const sixth = $('#sixth').val();
+            
+            const code = `${first}${second}${third}${fourth}${fifth}${sixth}`
+            console.log({code:code.length})
+            
+            if(code.length<6){
+                $('.multi-fa-validate-fail').addClass('block');
+                return;
+            }
+            if(!isNumeric(code)){
+                $('.multi-fa-validate-fail').addClass('block');
+                return;
+            }
+        })
+
+      });
+
+      function isNumeric(str) {
+        if (typeof str != "string") return false // we only process strings!  
+        return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+               !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+      }
+    </script>
+  </body>
+</html>
