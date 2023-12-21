@@ -2,6 +2,7 @@ package com.server.sso.auth;
 
 import com.server.sso.exception.customs.ForbiddenException;
 import com.server.sso.exception.customs.UnAuthenticateException;
+import com.server.sso.mail.EmailServiceImpl;
 import com.server.sso.redis.RedisDataAccess;
 import com.server.sso.redis.RedisUser;
 import com.server.sso.security.JwtService;
@@ -53,6 +54,7 @@ public class AuthService {
   private final Constant CONST;
   private final RedisDataAccess redisDataAccess;
   private final DefaultMFATokenManager defaultMFATokenManager;
+  private final EmailServiceImpl emailService;
   /* === Authenticate Route === */
   public ResponseEntity<AuthResponse> authenticate(HttpServletRequest request,
                                                    HttpServletResponse response) {
@@ -184,6 +186,8 @@ public class AuthService {
             .build();
         redisDataAccess.save(redisUser);
         jwtService.writeCookie(redisUser.getRefreshTokenVersion(),newUser.getEmail(), response);
+
+        emailService.sendMail(userSaved.getEmail(),"Confirmation","https://google.com");
       }
       return "redirect:/dashboard";
     } catch (RuntimeException e) {
