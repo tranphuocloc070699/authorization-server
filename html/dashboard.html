@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="../src/main/resources/static/fontawesome/all.css" />
+    
+    <link rel="stylesheet" href="../src/main/resources/static/css/reset.css" />
+    <link rel="stylesheet" href="../src/main/resources/static/css/styles.css" />
+    <link rel="stylesheet" href="../src/main/resources/static/css/dashboard.css" />
+    <title>Signup Page</title>
+  </head>
+  <body>
+    <div class="dashboard-wrapper">
+      <div class="container dashboard-wrapper-container">
+        <h2 class="dashboard-header-title">Authorization Server</h2>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="dashboard-sidebar">
+              <a th:href="@{/dashboard}" class="dashboard-sidebar-item">
+                <i class="fa-regular fa-user dashboard-sidebar-item-icon"></i>
+                <p class="dashboard-sidebar-item-title">Profile</p>
+              </a>
+              <a th:href="@{/logout}" class="dashboard-sidebar-item red">
+                <i class="fa-solid fa-arrow-right-from-bracket dashboard-sidebar-item-icon"></i>
+                <p class="dashboard-sidebar-item-title">Log out</p>
+              </a>
+            </div>
+          </div>
+          <div class="col-md-9">
+            <div class="dashboard-container">
+             
+              <div class="dashboard-body">
+                <!-- Profile -->
+                <div class="dashboard-body-group">
+                  <div class="dashboard-boby-group-info">
+                    <h3 class="dashboard-body-group-title">Profile</h3>
+                    <div class="dashboard-body-group-info-item">
+                      <p class="dashboard-body-group-info-item-title">Name</p>
+                      <p class="dashboard-body-group-info-item-content">Placeholder</p>
+                    </div>
+                    <div class="dashboard-body-group-info-item">
+                      <p class="dashboard-body-group-info-item-title">Email</p>
+                      <p class="dashboard-body-group-info-item-content">Placeholder@example.com</p>
+                    </div>
+                  </div>
+                </div>
+                <!-- Settings -->
+                <div class="dashboard-body-group">
+                  <div class="dashboard-boby-group-info">
+                    <h3 class="dashboard-body-group-title">Settings</h3>
+                    <div class="dashboard-body-group-info-item">
+                      <p class="dashboard-body-group-info-item-title">Multi Factor Authentication</p>
+                      <div class="dashboard-body-group-info-item-content">
+                        <label class="switch" for="checkbox">
+                          <input type="checkbox" id="checkbox" checked />
+                          <div class="slider round"></div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                </div>
+            </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

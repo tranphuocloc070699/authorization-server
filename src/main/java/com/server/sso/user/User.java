@@ -104,11 +104,11 @@ public class User implements UserDetails {
 //    createdAt = new Date();
 //  }
 //
-  @PreUpdate
-  protected void onUpdate() {
-    if (isUsing2FA) {
-      secret = RandomData.generateRandomBase32();
-    }
-  }
+//  @PreUpdate
+//  protected void onUpdate() {
+//    if (isUsing2FA) {
+//      secret = RandomData.generateRandomBase32();
+//    }
+//  }
 
 }

@@ -1,7 +1,7 @@
 
 :root{
   --text-color:#333;
-  --bg-login:#fbfbfd;
+  --bg-auth:#fbfbfd;
   --blue-color:#386bc0;
 }
 * {
