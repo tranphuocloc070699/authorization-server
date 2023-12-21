@@ -4,52 +4,140 @@
 <head>
     <meta charset="UTF-8">
     <title>Sign Up</title>
+    <link
+            rel="stylesheet"
+            type="text/css"
+            th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
+    />
+    <link rel="stylesheet" type="text/css" th:href="@{/fontawesome/all.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/reset.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/auth.css}" />
+
+    <script
+            type="text/javascript"
+            th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"
+    ></script>
+    <script
+            type="text/javascript"
+            th:src="@{/webjars/jquery/jquery.min.js}"
+    ></script>
+    <script th:src="@{/js/validator.js}"></script>
 </head>
 <body>
-<form method="post" role="form" th:action="@{/users/save}" th:object="${user}">
-    <div class="form-group mb-3">
-        <label class="form-label">Name</label>
-        <input class="form-control"
-               id="name"
-               name="name"
-               placeholder="Enter name"
-               th:field="*{name}"
-               type="text"
-        />
-        <p th:errors="*{name}" class="text-danger"
-           th:if="${#fields.hasErrors('name')}">
-        </p>
-    </div>
-    <div class="form-group mb-3">
-        <label class="form-label">Email</label>
-        <input class="form-control"
-               id="email"
-               name="email"
-               placeholder="Enter email address"
-               th:field="*{email}"
-               type="email"
-        />
-        <p th:errors="*{email}" class="text-danger"
-           th:if="${#fields.hasErrors('email')}">
-        </p>
-    </div>
-    <div class="form-group mb-3">
-        <label class="form-label">Password</label>
-        <input class="form-control"
-               id="password"
-               name="password"
-               placeholder="Enter password"
-               th:field="*{password}"
-               type="password"
-        />
-        <p th:errors="*{password}" class="text-danger"
-           th:if="${#fields.hasErrors('password')}">
-        </p>
-    </div>
+<!--<form id="signup-form" method="post" role="form" th:action="@{/users/save}" th:object="${user}">-->
+<!--    <div class="form-group mb-3">-->
+<!--        <label class="form-label">Name</label>-->
+<!--        <input class="form-control"-->
+<!--               id="name"-->
+<!--               name="name"-->
+<!--               placeholder="Enter name"-->
+<!--               th:field="*{name}"-->
+<!--               type="text"-->
+<!--        />-->
+<!--        <p th:errors="*{name}" class="text-danger"-->
+<!--           th:if="${#fields.hasErrors('name')}">-->
+<!--        </p>-->
+<!--    </div>-->
+<!--    <div class="form-group mb-3">-->
+<!--        <label class="form-label">Email</label>-->
+<!--        <input class="form-control"-->
+<!--               id="email"-->
+<!--               name="email"-->
+<!--               placeholder="Enter email address"-->
+<!--               th:field="*{email}"-->
+<!--               type="email"-->
+<!--        />-->
+<!--        <p th:errors="*{email}" class="text-danger"-->
+<!--           th:if="${#fields.hasErrors('email')}">-->
+<!--        </p>-->
+<!--    </div>-->
+<!--    <div class="form-group mb-3">-->
+<!--        <label class="form-label">Password</label>-->
+<!--        <input class="form-control"-->
+<!--               id="password"-->
+<!--               name="password"-->
+<!--               placeholder="Enter password"-->
+<!--               th:field="*{password}"-->
+<!--               type="password"-->
+<!--        />-->
+<!--        <p th:errors="*{password}" class="text-danger"-->
+<!--           th:if="${#fields.hasErrors('password')}">-->
+<!--        </p>-->
+<!--    </div>-->
 
-    <div class="form-group mb-3">
-        <button class="btn btn-primary" type="submit">Register</button>
+<!--    <div class="form-group mb-3">-->
+<!--        <button class="btn btn-primary" type="submit">Register</button>-->
+<!--    </div>-->
+<!--</form>-->
+
+<div class="auth-wrapper">
+    <div class="container auth-container">
+        <div class="row">
+            <div class="col-12 col-md-4 offset-md-4">
+                <form class="auth-form" id="signup-form" method="post" role="form" th:action="@{/users/save}" th:object="${user}">
+                    <a class="auth-title" th:href="@{/login}">
+                        Signup Page
+                        <div class="auth-title-navigate">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>Log In Page</span>
+                        </div>
+                    </a>
+                    <div class="form-group ">
+                        <label for="name" class="form-label">Username</label>
+                        <input id="name" name="name" type="text" placeholder="Enter something..." class="form-input"   th:field="*{name}">
+                        <span class="form-error__message"></span>
+                    </div>
+                    <div class="form-group ">
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email" name="email" type="text" placeholder="Enter something..." class="form-input" th:field="*{email}">
+                        <span class="form-error__message"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <input id="password" name="password" type="password" placeholder="Enter something..."  class="form-input" th:field="*{password}">
+                        <span class="form-error__message"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="password_confirmation" class="form-label">Password Confirmation</label>
+                        <input id="password_confirmation" name="password_confirmation" type="password" placeholder="Enter something..."  class="form-input">
+                        <span class="form-error__message"></span>
+                    </div>
+                    <div class="auth-btn-submit signup">
+                        <button >SIGN UP</button>
+                    </div>
+                    <div class="auth-separate"></div>
+                    <p class="auth-social-title">or login with</p>
+                    <div class="auth-social-group">
+                        <a th:href="@{/oauth2/authorization/google}">
+                            <i class="fa-brands fa-google auth-social-google"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-</form>
+</div>
+    <script type="text/javascript">
+        Validator({
+     form: '#signup-form',
+     formGroupSelector: '.form-group',
+     errorSelector: '.form-error__message',
+     rules: [
+       Validator.isRequired('#name', 'Enter your name, please!'),
+       Validator.isRequired('#email'),
+       Validator.isEmail('#email'),
+       Validator.isRequired('#password'),
+       Validator.minLength('#password', 6,'Password cannot less than 6 character'),
+       Validator.isRequired('#password_confirmation'),
+        Validator.isConfirmed('#password_confirmation', function () {
+     return document.querySelector('#signup-form #password').value;
+   }, 'Password confirmation not matching')
+     ],
+     onSubmit: function (data) {
+       console.log(data);
+     }
+   });
+    </script>
 </body>
 </html>

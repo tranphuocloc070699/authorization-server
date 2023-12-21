@@ -48,7 +48,7 @@ public class SecurityConfiguration {
 
                 .permitAll()
                 .anyRequest()
-                .authenticated())
+                .permitAll())
 
         .formLogin(form -> form
             .loginPage("/login")

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="../src/main/resources/static/fontawesome/all.css" />
+    
+    <link rel="stylesheet" href="../src/main/resources/static/css/reset.css" />
+    <link rel="stylesheet" href="../src/main/resources/static/css/styles.css" />
+    <link rel="stylesheet" href="../src/main/resources/static/css/auth.css" />
+    <title>Login Page</title>
+  </head>
+  <body>
+    <div class="auth-wrapper">
+        <div class="container auth-container">
+            <div class="row">
+                <div class="col-12 col-md-4 offset-md-4">
+                    <form id="login-form" class="auth-form">
+                        <a href="/html/signup.html" class="auth-title">
+                            Login Page
+                            <div class="auth-title-navigate">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>Sign Up Page</span>
+                            </div>
+                        </a>
+                        <div class="form-group ">
+                            <label for="email" class="form-label">Email</label>
+                            <input id="email" name="email" type="text" placeholder="Enter something..." class="form-input">
+                            <span class="form-error__message"></span>
+                          </div>
+                          <div class="form-group ">
+                            <label for="password" class="form-label">Password</label>
+                            <input id="password" name="password" type="text" placeholder="Enter something..." class="form-input">
+                            <span class="form-error__message"></span>
+                          </div>
+                        <div class="auth-btn-submit login">
+                            <button >LOG IN</button>
+                        </div>
+                        <div class="auth-separate"></div>
+                        <p class="auth-social-title">or login with</p>
+                        <div class="auth-social-group">
+                            <a href="">
+                                <i class="fa-brands fa-google auth-social-google"></i>
+
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../src/main/resources/static/js/validator.js">
+    </script>
+    <script>
+    
+         Validator({
+            form: '#login-form',
+            formGroupSelector: '.form-group',
+            errorSelector: '.form-error__message',
+            rules: [
+              Validator.isRequired('#email'),
+              Validator.isEmail('#email'),
+
+              Validator.isRequired('#password'),
+              Validator.minLength('#password', 6,'Password cannot less than 6 character'),
+            ],
+            onSubmit: function (data) {
+              console.log(data);
+            }
+          }); 
+    </script>
+  </body>
+</html>

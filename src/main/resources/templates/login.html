@@ -1,24 +1,106 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
 <head>
-    <title>Please Log In</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta
+            name="viewport"
+            content="width=device-width,initial-scale=1.0, minimum-scale=1.0"
+    />
+    <link
+            rel="stylesheet"
+            type="text/css"
+            th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
+    />
+    <link rel="stylesheet" type="text/css" th:href="@{/fontawesome/all.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/reset.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/auth.css}" />
+
+    <script
+            type="text/javascript"
+            th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"
+    ></script>
+    <script
+            type="text/javascript"
+            th:src="@{/webjars/jquery/jquery.min.js}"
+    ></script>
+    <script th:src="@{/js/validator.js}"></script>
+    <title>Login Page</title>
 </head>
 <body>
-<h1>Please Log In</h1>
+
 <!--th:action="${redirectUrl} ? @{/login?redirectUrl=} + ${redirectUrl} : @{/login}"-->
-<form th:action="@{/login}" method="post">
-    <div th:if="${param.error}">
-        <p class="alert alert-danger" th:text="${session.loginError}"></p>
+<!--<form th:action="@{/login}" method="post">-->
+<!--    <div th:if="${param.error}">-->
+<!--        <p class="alert alert-danger" th:text="${session.loginError}"></p>-->
+<!--    </div>-->
+<!--    <input type="text" name="redirectUrl" th:value="${redirectUrl}" />-->
+<!--    <div>-->
+<!--        <input type="text" name="username" placeholder="Username"/>-->
+<!--    </div>-->
+<!--    <div>-->
+<!--        <input type="password" name="password" placeholder="Password"/>-->
+<!--    </div>-->
+<!--    <input type="submit" value="Log in" />-->
+<!--    <a th:href="@{/oauth2/authorization/google}">Login with Google</a>-->
+<!--</form>-->
+
+<div class="auth-wrapper">
+    <div class="container auth-container">
+        <div class="row">
+            <div class="col-12 col-md-4 offset-md-4">
+                <form id="login-form" class="auth-form"  th:action="@{/login}" method="post">
+                    <a th:href="@{/signup}" class="auth-title">
+                        Login Page
+                        <div class="auth-title-navigate">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>Sign Up Page</span>
+                        </div>
+                    </a>
+                    <div class="form-group ">
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email" name="email" type="text" placeholder="Enter something..." class="form-input">
+                        <span class="form-error__message"></span>
+                    </div>
+                    <div class="form-group ">
+                        <label for="password" class="form-label">Password</label>
+                        <input id="password" name="password" type="text" placeholder="Enter something..." class="form-input">
+                        <span class="form-error__message"></span>
+                    </div>
+                    <div class="auth-btn-submit login">
+                        <button >LOG IN</button>
+                    </div>
+                    <div class="auth-separate"></div>
+                    <p class="auth-social-title">or login with</p>
+                    <div class="auth-social-group">
+                        <a th:href="@{/oauth2/authorization/google}">
+                            <i class="fa-brands fa-google auth-social-google"></i>
+                        </a>
+
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    <input type="text" name="redirectUrl" th:value="${redirectUrl}" />
-    <div>
-        <input type="text" name="username" placeholder="Username"/>
-    </div>
-    <div>
-        <input type="password" name="password" placeholder="Password"/>
-    </div>
-    <input type="submit" value="Log in" />
-    <a th:href="@{/oauth2/authorization/google}">Login with Google</a>
-</form>
+</div>
+
+<script>
+    Validator({
+   form: '#login-form',
+   formGroupSelector: '.form-group',
+   errorSelector: '.form-error__message',
+   rules: [
+     Validator.isRequired('#email'),
+     Validator.isEmail('#email'),
+
+     Validator.isRequired('#password'),
+     Validator.minLength('#password', 6,'Password cannot less than 6 character'),
+   ],
+   onSubmit: function (data) {
+     console.log(data);
+   }
+ });
+</script>
 </body>
 </html>

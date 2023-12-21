@@ -1,0 +1,27 @@
+
+:root{
+  --text-color:#333;
+  --bg-login:#fbfbfd;
+  --blue-color:#386bc0;
+}
+* {
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+  }
+
+  html {
+    box-sizing: border-box;
+    overflow-x: hidden;
+    font-size: 62.5%;
+
+  }
+  body {
+    margin: 0;
+    line-height: 1.6rem;
+    font-size: 1.4rem;
+    font-family: 'Roboto',sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+    color: var(--text-color);
+}
+
