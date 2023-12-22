@@ -1,6 +1,7 @@
 package com.server.sso.auth;
 
 
+import com.google.zxing.qrcode.decoder.Mode;
 import com.server.sso.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -60,6 +61,11 @@ public class AuthController {
     return authService.verifyMultiFactorView(authentication,model,redirectUrl);
   }
 
+  @GetMapping("/signup-instruction")
+  public String signupInstructionView(Authentication authentication, HttpSession httpSession,Model model) {
+    return authService.signupInstructionView(authentication,httpSession,model);
+  }
+
   @PostMapping("/verify-multi-factor")
   public String verifyMultiFactor(Authentication authentication,Model model,HttpSession httpSession,
                                   @RequestParam("numberDigits") String numberDigits,HttpServletResponse response) {
@@ -75,8 +81,8 @@ public class AuthController {
   @PostMapping("/users/save")
   public String saveUser(@Valid @ModelAttribute("user") AuthSignUpRequest user, BindingResult result,
                          Authentication authentication, HttpSession httpSession, HttpServletRequest request,
-                         HttpServletResponse response) {
-    return authService.signup(authentication,request,response,httpSession,result,user);
+                         HttpServletResponse response, Model model) {
+    return authService.signup(authentication,request,response,httpSession,result,user,model);
   }
 
 

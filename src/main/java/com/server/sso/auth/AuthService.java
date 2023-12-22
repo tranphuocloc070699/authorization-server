@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.thymeleaf.TemplateEngine;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -105,7 +107,8 @@ public class AuthService {
       return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
-
+  @Autowired
+  TemplateEngine templateEngine;
   public String loginView(Authentication authentication, HttpSession session, String redirectUrl) {
     if (authentication != null && authentication.isAuthenticated()) {
       return "redirect:/dashboard";
@@ -141,12 +144,19 @@ public class AuthService {
 
   public String signup(Authentication authentication, HttpServletRequest request, HttpServletResponse response,
                        HttpSession httpSession, BindingResult result,
-                       AuthSignUpRequest user) {
+                       AuthSignUpRequest user, Model model) {
     try {
       if (result.hasErrors()) {
         return "signup"; // Return back to the form with error messages
       }
       String passwordEncoded = passwordEncoder.encode(user.getPassword());
+
+      Optional<User> userExisted= userDataAccess.findByEmail(user.getEmail());
+      if(userExisted.isPresent()){
+        model.addAttribute("errorMessage","Email " + user.getEmail() + " Already exist");
+        return "signup";
+      }
+
       User newUser = User.builder()
           .email(user.getEmail())
           .role(Role.USER)
@@ -186,14 +196,21 @@ public class AuthService {
             .build();
         redisDataAccess.save(redisUser);
         jwtService.writeCookie(redisUser.getRefreshTokenVersion(),newUser.getEmail(), response);
-
+        httpSession.setAttribute("email",newUser.getEmail());
         emailService.sendMail(userSaved.getEmail(),"Confirmation","https://google.com");
       }
-      return "redirect:/dashboard";
+      return "redirect:/signup-instruction";
     } catch (RuntimeException e) {
       System.err.println("saveUser Exception :" + e.getMessage());
       throw new RuntimeException(e.getMessage());
     }
+  }
+
+  public String signupInstructionView(Authentication authentication,HttpSession httpSession ,Model model) {
+    if (httpSession.getAttribute("email") != null) {
+      model.addAttribute("email",httpSession.getAttribute("email"));
+    }
+    return "signup-instruction";
   }
 
   private String getName(Authentication authentication) {
@@ -321,9 +338,8 @@ public class AuthService {
     }
 
     String redirectUrl = (String) httpSession.getAttribute("redirectUrl");
-
-
-
     return redirectUrl == null ? "dashboard" : redirectUrl;
   }
+
+
 }

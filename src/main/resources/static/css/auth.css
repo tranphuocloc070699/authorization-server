@@ -18,6 +18,13 @@
     flex-direction: column;
     gap: 20px;
 }
+/* auth server error */
+.auth-server-error{
+    color: #e64747;
+    background-color: #faf4f4;
+    padding: 16px;
+    border-radius: 4px;
+}
 /* auth Title */
 .auth-title{
     background-color: var(--text-color);

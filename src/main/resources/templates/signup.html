@@ -83,6 +83,7 @@
                             <span>Log In Page</span>
                         </div>
                     </a>
+                    <p th:if="${errorMessage}" class="auth-server-error">th:text="${errorMessage}"</p>
                     <div class="form-group ">
                         <label for="name" class="form-label">Username</label>
                         <input id="name" name="name" type="text" placeholder="Enter something..." class="form-input"   th:field="*{name}">
@@ -133,10 +134,7 @@
         Validator.isConfirmed('#password_confirmation', function () {
      return document.querySelector('#signup-form #password').value;
    }, 'Password confirmation not matching')
-     ],
-     onSubmit: function (data) {
-       console.log(data);
-     }
+     ]
    });
     </script>
 </body>

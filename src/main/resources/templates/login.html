@@ -58,6 +58,7 @@
                             <span>Sign Up Page</span>
                         </div>
                     </a>
+                    <p th:if="${param.error}" th:text="${session.loginError}" class="auth-server-error"></p>
                     <div class="form-group ">
                         <label for="email" class="form-label">Email</label>
                         <input id="email" name="email" type="text" placeholder="Enter something..." class="form-input">
@@ -96,10 +97,7 @@
 
      Validator.isRequired('#password'),
      Validator.minLength('#password', 6,'Password cannot less than 6 character'),
-   ],
-   onSubmit: function (data) {
-     console.log(data);
-   }
+   ]
  });
 </script>
 </body>

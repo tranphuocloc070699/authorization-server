@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Instruction</title>
+    <link
+            rel="stylesheet"
+            type="text/css"
+            th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
+    />
+    <link rel="stylesheet" type="text/css" th:href="@{/fontawesome/all.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/reset.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/signup-instruction.css}" />
+
+    <script
+            type="text/javascript"
+            th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"
+    ></script>
+    <script
+            type="text/javascript"
+            th:src="@{/webjars/jquery/jquery.min.js}"
+    ></script>
+    <script th:src="@{/js/validator.js}"></script>
+</head>
+<body>
+<div class="signup-instruction-wrapper">
+    <div class="container signup-instruction-container">
+        <div class="row">
+            <div class="col-12 col-md-4 offset-md-4">
+                <div class="signup-instruction-body">
+                    <div>
+                        <h3 class="signup-instruction-body-title">
+                            signup instruction
+                        </h3>
+                        <h4 class="signup-instruction-body-content">We already send the verification mail to your email:
+                            <span th:text="${email}"></span>
+                            <p>
+                                Please check the email to finished the signup.
+                            </p>
+                        </h4>
+                    </div>
+
+                    <div class="signup-instruction-footer">
+                        <a class="signup-instruction-btn mail" target="_blank" href="https://mail.google.com">Go to google mail</a>
+                        <a class="signup-instruction-btn login" th:href="@{/login}">Back to login form</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

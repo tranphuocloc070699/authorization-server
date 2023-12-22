@@ -45,10 +45,10 @@ public class SecurityConfiguration {
                 "/users/**",
                 "/auth/**",
                 "/swagger" + "-ui/**", "/v3" + "/api" + "-docs/**")
-
                 .permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**","/fontawesome/**","/webfonts/**").permitAll()
                 .anyRequest()
-                .permitAll())
+                .authenticated())
 
         .formLogin(form -> form
             .loginPage("/login")

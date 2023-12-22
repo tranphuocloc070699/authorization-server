@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 @Service
 public class EmailServiceImpl implements EmailService {
@@ -34,7 +36,7 @@ public class EmailServiceImpl implements EmailService {
       mimeMessageHelper.setTo(to);
       mimeMessageHelper.setSubject(subject);
 
-      String htmlContent = loadTemplate("mail-confirmation", confirmationLink);
+      String htmlContent = loadTemplate("mail-confirmation", confirmationLink,"http://localhost:8080");
 
       mimeMessageHelper.setText(htmlContent,true);
 
@@ -47,12 +49,20 @@ public class EmailServiceImpl implements EmailService {
 
   }
 
-  private String loadTemplate(String templateName, String confirmationLink) {
+  public String loadTemplate(String templateName, String confirmationLink,String serverLink) {
     Context context = new Context();
     context.setVariable("confirmationLink", confirmationLink);
-
+    context.setVariable("serverLink", serverLink);
+    ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+    templateResolver.setPrefix("templates/");
+    templateResolver.setCacheable(false);
+    templateResolver.setSuffix(".html");
+    templateResolver.setTemplateMode("HTML");
+    templateResolver.setForceTemplateMode(true);
+    TemplateEngine templateEngine1 = new SpringTemplateEngine();
+    templateEngine1.setTemplateResolver(templateResolver);
     try {
-      return templateEngine.process("templates/" + templateName + ".html", context);
+      return templateEngine1.process(templateName, context);
     } catch (Exception e) {
       throw new RuntimeException("Error loading template", e);
     }
