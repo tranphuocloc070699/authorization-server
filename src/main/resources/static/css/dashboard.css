@@ -161,12 +161,15 @@ input:checked + .slider:before {
   display: none;
 }
 .dashboard-modal-body.block {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .dashboard-modal-body-title {
   font-size: 1.6rem;
   line-height: 2rem;
   font-weight: 600;
+  text-align: center;
 }
 .dashboard-modal-body-title.center {
   text-align: center;

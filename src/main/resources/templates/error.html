@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1.0, minimum-scale=1.0"
+    />
+    <link
+            rel="stylesheet"
+            type="text/css"
+            th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
+    />
+    <link rel="stylesheet" type="text/css" th:href="@{/fontawesome/all.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/reset.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/error.css}" />
+
+    <script
+            type="text/javascript"
+            th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"
+    ></script>
+    <script
+            type="text/javascript"
+            th:src="@{/webjars/jquery/jquery.min.js}"
+    ></script>
+    <title>Error Page</title>
+  </head>
+</html>
+</head>
+<body>
+    <body>
+        <div class="error-wrapper">
+            <div class="container">
+                <div class="error-container">
+                    <h1 class="error-title" th:text="${statusCode}"></h1>
+                    <div class="error-icon">
+                        <i class="fa-solid fa-bug"></i>
+                    </div>
+                    <h2 class="error-message" th:text="${errorMessage}"></h2>
+                    <h3 class="error-note">Please contact to administrator about this problem!</h3>
+                    <a class="error-back__btn" th:href="@{/dashboard}">Back to homepage</a>
+                </div>
+               
+            </div>
+        </div>
+    </body>
+</body>
+</html>

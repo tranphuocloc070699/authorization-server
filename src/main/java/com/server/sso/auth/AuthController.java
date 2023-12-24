@@ -1,25 +1,9 @@
 package com.server.sso.auth;
 
+import java.io.IOException;
 
-import com.google.zxing.qrcode.decoder.Mode;
-import com.server.sso.security.JwtService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties;
 import org.springframework.data.repository.query.Param;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -28,50 +12,76 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.io.IOException;
-import java.security.Principal;
-import java.util.Collections;
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
-@Controller("")
+@Controller
 @RequiredArgsConstructor
 public class AuthController {
 
   private final AuthService authService;
 
 
+  
   @GetMapping("/login")
-  public String loginView(@Param("redirectUrl") String redirectUrl, Model model, HttpSession session, Principal principal,
-                       Authentication authentication) {
-    return authService.loginView(authentication,session,redirectUrl);
+  public String loginView(@Param("redirectUrl") String redirectUrl,
+                          HttpSession session,
+      Authentication authentication) {
+    return authService.loginView(authentication, session, redirectUrl);
   }
 
   @GetMapping("/signup")
-  public String signupView(Model model,Authentication authentication) {
-   return authService.signupView(authentication,model);
+  public String signupView(Model model, Authentication authentication) {
+    return authService.signupView(authentication, model);
   }
 
   @GetMapping("/dashboard")
   public String dashboardView(Authentication authentication, Model model) {
-    return authService.dashboardView(authentication,model);
+    return authService.dashboardView(authentication, model);
   }
 
   @GetMapping("/verify-multi-factor")
-  public String verifyMultiFactorView(Authentication authentication, Model model,@Param("redirectUrl") String redirectUrl) {
-    return authService.verifyMultiFactorView(authentication,model,redirectUrl);
+  public String verifyMultiFactorView(Authentication authentication, Model model,
+      @Param("redirectUrl") String redirectUrl) {
+    return authService.verifyMultiFactorView(authentication, model, redirectUrl);
   }
 
   @GetMapping("/signup-instruction")
-  public String signupInstructionView(Authentication authentication, HttpSession httpSession,Model model) {
-    return authService.signupInstructionView(authentication,httpSession,model);
+  public String signupInstructionView(Authentication authentication, HttpSession httpSession, Model model) {
+    return authService.signupInstructionView(authentication, httpSession, model);
+  }
+
+  @GetMapping("/signup-success")
+  public String signupSuccessView(Model model, @RequestParam("token") String token, HttpSession httpSession,
+      HttpServletRequest request,
+      HttpServletResponse response, Authentication authentication) {
+    return authService.signupSuccessView(authentication, httpSession, model, token, request, response);
   }
 
   @PostMapping("/verify-multi-factor")
-  public String verifyMultiFactor(Authentication authentication,Model model,HttpSession httpSession,
-                                  @RequestParam("numberDigits") String numberDigits,HttpServletResponse response) {
+  public String verifyMultiFactor(Authentication authentication,
+      Model model,
+      HttpSession httpSession,
+      @RequestParam("first") String first,
+      @RequestParam("second") String second,
+      @RequestParam("third") String third,
+      @RequestParam("fourth") String fourth,
+      @RequestParam("fifth") String fifth,
+      @RequestParam("sixth") String sixth,
+      HttpServletRequest request,
+      HttpServletResponse response) {
 
     try {
-      return authService.verifyMultiFactor(authentication,model,httpSession,numberDigits,response);
+      String numberDigits = "";
+      if(first.isEmpty() || second.isEmpty() || third.isEmpty() || fourth.isEmpty() || fifth.isEmpty() || sixth.isEmpty()){
+        model.addAttribute("verifyError","code must be 6 character, please enter the code on your Google Authenticator App");
+        return "verify-multi-factor";
+      }
+      numberDigits = first+second+third+fourth+fifth+sixth;
+      return authService.verifyMultiFactor(authentication, model, httpSession, numberDigits,request, response);
     } catch (IOException e) {
       System.err.println("[AuthController - POST] verifyMultiFactor error: " + e.getMessage());
       return "login";
@@ -80,10 +90,9 @@ public class AuthController {
 
   @PostMapping("/users/save")
   public String saveUser(@Valid @ModelAttribute("user") AuthSignUpRequest user, BindingResult result,
-                         Authentication authentication, HttpSession httpSession, HttpServletRequest request,
-                         HttpServletResponse response, Model model) {
-    return authService.signup(authentication,request,response,httpSession,result,user,model);
+      Authentication authentication, HttpSession httpSession, HttpServletRequest request,
+      HttpServletResponse response, Model model) {
+    return authService.signup(authentication, request, response, httpSession, result, user, model);
   }
-
 
 }

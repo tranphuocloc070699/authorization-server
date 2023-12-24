@@ -1,22 +1,23 @@
 package com.server.sso.security;
 
-import com.server.sso.user.User;
-import com.server.sso.user.UserDataAccess;
-import lombok.RequiredArgsConstructor;
+import java.security.SecureRandom;
+import java.util.Optional;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.security.SecureRandom;
-import java.util.Optional;
+import com.server.sso.user.User;
+import com.server.sso.user.UserDataAccess;
+
+import lombok.RequiredArgsConstructor;
 
 
 /*This class implement to prevent
@@ -29,15 +30,12 @@ public class AppConfiguration {
   @Bean
 //  @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
   public UserDetailsService userDetailsService() {
-    return new UserDetailsService() {
-      @Override
-      public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<User> userExisting = userDataAccess.findByEmail(username);
-        if(userExisting.isPresent()){
-          return new org.springframework.security.core.userdetails.User(username,userExisting.get().getPassword(), userExisting.get().getAuthorities());
-        }
-        throw new UsernameNotFoundException("user with email ["+username+"] not found");
+    return username -> {
+      Optional<User> userExisting = userDataAccess.findByEmail(username);
+      if(userExisting.isPresent()){
+        return new org.springframework.security.core.userdetails.User(username,userExisting.get().getPassword(), userExisting.get().getAuthorities());
       }
+      throw new UsernameNotFoundException("user with email ["+username+"] not found");
     };
   }
 

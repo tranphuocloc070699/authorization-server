@@ -1,16 +1,14 @@
 package com.server.sso.auth;
 
+import org.springframework.http.HttpStatus;
+
 import com.server.sso.shared.ResponseObject;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.springframework.http.HttpStatus;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -23,6 +21,5 @@ public class AuthResponse extends ResponseObject {
     super(status, data, message, path);
     this.accessToken = accessToken;
 
-    System.out.println("AuthResponse constructor");
   }
 }

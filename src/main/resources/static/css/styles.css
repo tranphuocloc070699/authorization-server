@@ -3,6 +3,8 @@
   --text-color:#333;
   --bg-auth:#fbfbfd;
   --blue-color:#386bc0;
+  --red-color:#e64747;
+  --red-bg:#faf4f4;
 }
 * {
     box-sizing: border-box;

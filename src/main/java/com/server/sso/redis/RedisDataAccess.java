@@ -1,10 +1,12 @@
 package com.server.sso.redis;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
@@ -16,6 +18,18 @@ public class RedisDataAccess {
   public RedisUser save(RedisUser user){
     template.opsForHash().put(HASH_KEY,user.getEmail(),user);
     return user;
+  }
+  public RedisUser saveTemporary(String key ,RedisUser user,Integer ttl){
+        if(ttl==null) ttl = 60;
+        template.opsForValue().set(key,user);
+        template.expire(key,ttl, TimeUnit.SECONDS);
+    return user;
+  }
+  public RedisUser findUserTemporaryByKey(String key){
+    return (RedisUser) template.opsForValue().get(key);
+  }
+  public Boolean deleteUserTemporary(String key){
+   return  template.delete(key);
   }
 
   public List<RedisUser> findAll(){

@@ -8,85 +8,265 @@
       content="width=device-width,initial-scale=1.0, minimum-scale=1.0"
     />
     <link
-      rel="stylesheet"
-      type="text/css"
-      th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
+            rel="stylesheet"
+            type="text/css"
+            th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
     />
+    <link rel="stylesheet" type="text/css" th:href="@{/fontawesome/all.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/reset.css}" />
     <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/dashboard.css}" />
+
     <script
-      type="text/javascript"
-      th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"
+            type="text/javascript"
+            th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"
     ></script>
     <script
-      type="text/javascript"
-      th:src="@{/webjars/jquery/jquery.min.js}"
+            type="text/javascript"
+            th:src="@{/webjars/jquery/jquery.min.js}"
     ></script>
     <title>Dashboard</title>
   </head>
 </html>
 </head>
+<!--<body>-->
+<!--<h2>Current User:</h2>-->
+<!--<p th:text="${user}"></p>-->
+<!--<br>-->
+<!--<h2>User List:</h2>-->
+<!--&lt;!&ndash; <ul>&ndash;&gt;-->
+<!--&lt;!&ndash;    <li th:each="user : ${userList}">&ndash;&gt;-->
+<!--&lt;!&ndash;        <p th:text="${user}"></p>&ndash;&gt;-->
+<!--&lt;!&ndash;    </li>&ndash;&gt;-->
+<!--&lt;!&ndash;</ul> &ndash;&gt;-->
+<!--&lt;!&ndash;<p th:if="${isUse2FA==true}">Using 2FA</p>&ndash;&gt;-->
+<!--<button  id="toggle-2fa__btn">Test 2fa</button>-->
+<!--<img id="qr-code" src="" alt="Girl in a jacket" >-->
+<!--<br>-->
+<!--<p id="mfa-code"></p>-->
+
+<!--<div>&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;</div>-->
+
+<!--&lt;!&ndash;<div class="otp-field mb-4">&ndash;&gt;-->
+<!--&lt;!&ndash;  <input type="number" />&ndash;&gt;-->
+<!--&lt;!&ndash;  <input type="number" disabled />&ndash;&gt;-->
+<!--&lt;!&ndash;  <input type="number" disabled />&ndash;&gt;-->
+<!--&lt;!&ndash;  <input type="number" disabled />&ndash;&gt;-->
+<!--&lt;!&ndash;  <input type="number" disabled />&ndash;&gt;-->
+<!--&lt;!&ndash;  <input type="number" disabled />&ndash;&gt;-->
+<!--&lt;!&ndash;</div>&ndash;&gt;-->
+<!--<input id="number-digits" placeholder="enter number" >-->
+<!--<button id="verify__btn" >Verify</button>-->
+
+<!--<script type="text/javascript">-->
+<!--  $(document).ready(function () {-->
+<!--    $("#toggle-2fa__btn").on("click", function () {-->
+<!--        const url = "[[@{/auth/2fa}]]";-->
+<!--        $.ajax({-->
+<!--            url,-->
+<!--            type: 'GET',-->
+<!--            dataType: 'json',-->
+<!--            success: function (response) {-->
+<!--                if(response.data.mfaCode && response.data.qrCode){-->
+<!--                    $('#qr-code').attr('src', response.data.qrCode);-->
+<!--                    $('#mfa-code').text(response.data.mfaCode);-->
+<!--                }-->
+<!--            },-->
+<!--            error: function (error) {-->
+<!--                console.error('Error:', error);-->
+<!--            }-->
+<!--        });-->
+<!--    });-->
+
+<!--$("#verify__btn").on("click", function () {-->
+<!--    console.log('1231231312');-->
+<!--        const numberValue = $('#number-digits').val();-->
+<!--        const url = "[[@{/auth/verify2fa}]]";-->
+
+<!--        params = { numberValue};-->
+<!--        $.post(url, params, function (response) {-->
+<!--            console.log({response})-->
+<!--          }).fail(function () {-->
+<!--            console.error('can not connect to server')-->
+<!--          });-->
+<!--    });-->
+<!--  });-->
+<!--</script>-->
+<!--</body>-->
+
 <body>
-<h2>Current User:</h2>
-<p th:text="${user}"></p>
-<br>
-<h2>User List:</h2>
-<!-- <ul>-->
-<!--    <li th:each="user : ${userList}">-->
-<!--        <p th:text="${user}"></p>-->
-<!--    </li>-->
-<!--</ul> -->
-<!--<p th:if="${isUse2FA==true}">Using 2FA</p>-->
-<button  id="toggle-2fa__btn">Test 2fa</button>
-<img id="qr-code" src="" alt="Girl in a jacket" >
-<br>
-<p id="mfa-code"></p>
+<div class="dashboard-wrapper">
+  <div class="container dashboard-wrapper-container">
+    <h2 class="dashboard-header-title">Authorization Server</h2>
+    <div class="row">
+      <div class="col-md-3">
+        <div class="dashboard-sidebar">
+          <a th:href="@{/dashboard}" class="dashboard-sidebar-item">
+            <i class="fa-regular fa-user dashboard-sidebar-item-icon"></i>
+            <p class="dashboard-sidebar-item-title">Profile</p>
+          </a>
+          <a th:href="@{/logout}" class="dashboard-sidebar-item red">
+            <i class="fa-solid fa-arrow-right-from-bracket dashboard-sidebar-item-icon"></i>
+            <p class="dashboard-sidebar-item-title">Log out</p>
+          </a>
+        </div>
+      </div>
+      <div class="col-md-9">
+        <div class="dashboard-container">
 
-<div>--------------------------------------------</div>
+          <div class="dashboard-body">
+            <!-- Profile -->
+            <div class="dashboard-body-group">
+              <div class="dashboard-boby-group-info">
+                <h3 class="dashboard-body-group-title">Profile</h3>
+                <div class="dashboard-body-group-info-item">
+                  <p class="dashboard-body-group-info-item-title">Name</p>
+                  <p  class="dashboard-body-group-info-item-content" th:text="${user.name}"></p>
+                </div>
+                <div class="dashboard-body-group-info-item">
+                  <p class="dashboard-body-group-info-item-title">Email</p>
+                  <p class="dashboard-body-group-info-item-content" th:text="${user.email}"></p>
+                </div>
+              </div>
+            </div>
+            <!-- Settings -->
+            <div class="dashboard-body-group">
+              <div class="dashboard-boby-group-info">
+                <h3 class="dashboard-body-group-title">Settings</h3>
+                <div class="dashboard-body-group-info-item">
+                  <p class="dashboard-body-group-info-item-title">Multi Factor Authentication</p>
+                  <div class="dashboard-body-group-info-item-content">
+                    <label class="switch" for="multiFaCheckbox">
+                      <input type="checkbox" id="multiFaCheckbox" th:checked="${user.isUsing2FA}" />
+                      <div class="slider round"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-<!--<div class="otp-field mb-4">-->
-<!--  <input type="number" />-->
-<!--  <input type="number" disabled />-->
-<!--  <input type="number" disabled />-->
-<!--  <input type="number" disabled />-->
-<!--  <input type="number" disabled />-->
-<!--  <input type="number" disabled />-->
-<!--</div>-->
-<input id="number-digits" placeholder="enter number" >
-<button id="verify__btn" >Verify</button>
+<!-- Confirm Modal -->
+<div class="modal fade" id="confirmMultiFaModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title dashboard-modal-title" id="confirmMultiFaModalTitle">CONFIRMATION</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body dashboard-modal-body" id="confirmMultiFaModalBodyDisable">
+        <p class="dashboard-modal-body-title">Do you really want to disable multi factor authentication?</p>
+        <p class="dashboard-modal-body-notice">You need to scan QR code again when you enable this feature.</p>
+      </div>
+      <div class="modal-body dashboard-modal-body" id="confirmMultiFaModalBodyEnable">
+        <p class="dashboard-modal-body-title">Do you  want to enable multi factor authentication?</p>
+        <p class="dashboard-modal-body-notice">You have to download google authenticator on your mobile and scan the QR we will generate or enter the key below the QR</p>
+      </div>
+      <div class="modal-footer">
+        <button  data-bs-dismiss="modal" class="dashboard-modal-btn__close">Close</button>
+        <button class="dashboard-modal-btn__submit" id="toggleMultiFa">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Qr code Modal -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title dashboard-modal-title">QR CODE</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body dashboard-modal-body block" >
+        <p class="dashboard-modal-body-title">Scan this QR or enter the key below QR image to your Google Authenticator App</p>
+        <img id="qrCodeImage" src="" width="300" height="300"/>
+        <p class="dashboard-modal-body-notice center">Or enter this key</p>
+        <p id="qrCodeKey" class="dashboard-modal-body-title center" ></p>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  //qrCodeImage
+  //qrCodeKey
 
-<script type="text/javascript">
   $(document).ready(function () {
-    $("#toggle-2fa__btn").on("click", function () {
-        const url = "[[@{/auth/2fa}]]";
+    //toggle mutil factor authentication
+    $('#multiFaCheckbox').click(function (e) {
+      e.preventDefault();
+      const isChecked = !$('#multiFaCheckbox').prop('checked')
+      if(isChecked){
+        $('#confirmMultiFaModalBodyEnable').removeClass('block')
+        $('#confirmMultiFaModalTitle').removeClass('green')
+
+        $('#confirmMultiFaModalBodyDisable').addClass('block')
+        $('#confirmMultiFaModalTitle').addClass('red')
+      }else{
+        $('#confirmMultiFaModalBodyDisable').removeClass('block')
+        $('#confirmMultiFaModalTitle').removeClass('red')
+
+        $('#confirmMultiFaModalBodyEnable').addClass('block')
+        $('#confirmMultiFaModalTitle').addClass('green')
+      }
+      $('#confirmMultiFaModal').modal('show')
+    });
+
+    //button save changes clicked
+    $('#toggleMultiFa').click(function (e) {
+
+
+      //Because before checkbox change , old value is opposite
+      const isChecked = $('#multiFaCheckbox').prop('checked')
+      const url = "[[@{/auth/2fa/toggle}]]";
+      if(isChecked){
+        //Disable mutilFa
         $.ajax({
             url,
-            type: 'GET',
+            type: 'PUT',
             dataType: 'json',
             success: function (response) {
-                if(response.data.mfaCode && response.data.qrCode){
-                    $('#qr-code').attr('src', response.data.qrCode);
-                    $('#mfa-code').text(response.data.mfaCode);
+                if(response.data){
+                    console.log({data:response.data});
                 }
             },
             error: function (error) {
                 console.error('Error:', error);
+
             }
         });
-    });
+      }else{
+        //Enable mutilFa
+        $.ajax({
+            url,
+            type: 'PUT',
+            dataType: 'json',
+            success: function (response) {
+                if(response.data.mfaCode && response.data.qrCode){
+                    $('#qrCodeImage').attr('src', response.data.qrCode);
+                    $('#qrCodeKey').text(response.data.mfaCode);
+                    $('#qrModal').modal('show');
+                }
+            },
+            error: function (error) {
+                console.error('Error:', error);
 
-$("#verify__btn").on("click", function () {
-    console.log('1231231312');
-        const numberValue = $('#number-digits').val();
-        const url = "[[@{/auth/verify2fa}]]";
+            }
+        });
 
-        params = { numberValue};
-        $.post(url, params, function (response) {
-            console.log({response})
-          }).fail(function () {
-            console.error('can not connect to server')
-          });
+
+
+      }
+
+      $('#multiFaCheckbox').prop('checked',!isChecked);
+      $('#confirmMultiFaModal').modal('hide');
+
     });
-  });
+});
 </script>
 </body>
 </html>

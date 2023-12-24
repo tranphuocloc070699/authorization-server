@@ -11,7 +11,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -42,7 +45,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     String email = oAuth2User.getAttribute("email");
 
     Optional<User> userExisted = userDataAccess.findByEmail(email);
-
     if (userExisted.isPresent()) {
       /*Login case*/
       RedisUser redisUser = redisDataAccess.findRedisUserByEmail(email);
@@ -50,9 +52,27 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         /*When signup, redis user is already exist -> Call api notify new error*/
         System.err.println("Cannot read user from redis : " + redisUser.toString());
       }
+
+      if (redisUser.getIsUsing2FA()) {
+      UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+          authentication.getPrincipal(),
+          null
+      );
+      SecurityContextHolder.getContext().setAuthentication(authToken);
+      if (redirectUrl != null) {
+        response.sendRedirect("/verify-multi-factor?redirectUrl=" + redirectUrl);
+
+      }else{
+        response.sendRedirect("/verify-multi-factor");
+      }
+       return;
+    }
+
       redisUser.setRefreshTokenVersion(redisUser.getRefreshTokenVersion() + 1);
       redisDataAccess.save(redisUser);
       jwtService.writeCookie(redisUser.getRefreshTokenVersion(), email, response);
+
+      
     } else {
       /*Signup case*/
       User newUser = User.builder()
@@ -60,6 +80,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
           .role(Role.USER)
           .provider(Provider.GOOGLE)
           .name(name)
+          .isUsing2FA(false)
+          .secret(null)
           .password(null)
           .build();
       User userSaved = userDataAccess.save(newUser);
@@ -70,6 +92,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
           .email(userSaved.getEmail())
           .provider(userSaved.getProvider())
           .role(userSaved.getRole())
+          .isUsing2FA(userSaved.getIsUsing2FA())
+          .secret(userSaved.getSecret())
           .refreshTokenVersion(0)
           .createdAt(userSaved.getCreatedAt())
           .updatedAt(userSaved.getUpdatedAt())

@@ -1,5 +1,32 @@
 package com.server.sso.auth;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+
 import com.server.sso.exception.customs.ForbiddenException;
 import com.server.sso.exception.customs.UnAuthenticateException;
 import com.server.sso.mail.EmailServiceImpl;
@@ -22,29 +49,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.thymeleaf.TemplateEngine;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -57,6 +61,7 @@ public class AuthService {
   private final RedisDataAccess redisDataAccess;
   private final DefaultMFATokenManager defaultMFATokenManager;
   private final EmailServiceImpl emailService;
+
   /* === Authenticate Route === */
   public ResponseEntity<AuthResponse> authenticate(HttpServletRequest request,
                                                    HttpServletResponse response) {
@@ -107,8 +112,6 @@ public class AuthService {
       return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
-  @Autowired
-  TemplateEngine templateEngine;
   public String loginView(Authentication authentication, HttpSession session, String redirectUrl) {
     if (authentication != null && authentication.isAuthenticated()) {
       return "redirect:/dashboard";
@@ -128,17 +131,17 @@ public class AuthService {
     return "signup";
   }
   public String dashboardView(Authentication authentication, Model model) {
-    if (authentication != null) {
-      model.addAttribute("name", authentication.getName() != null ? getName(authentication) : "unknown");
-      if(authentication.getName()!=null){
-        RedisUser redisUser = redisDataAccess.findRedisUserByEmail(getName(authentication));
-        List<RedisUser> redisUserList = redisDataAccess.findAll();
-        model.addAttribute("userList",redisUserList);
-        model.addAttribute("user",redisUser);
-      }
-    } else {
-      model.addAttribute("name", "authentication null");
+    if (authentication == null || authentication.getName()==null) {
+      System.err.println("[AuthService - dashboardView] authentication null");
+      return "redirect:/login";
     }
+    Optional<User> user = userDataAccess.findByEmail(getName(authentication));
+    if ( user.isEmpty() ) {
+      System.err.println("[AuthService - dashboardView]  user null");
+      return "redirect:/login";
+    }
+    model.addAttribute("user", user.get());
+
     return "dashboard";
   }
 
@@ -149,7 +152,7 @@ public class AuthService {
       if (result.hasErrors()) {
         return "signup"; // Return back to the form with error messages
       }
-      String passwordEncoded = passwordEncoder.encode(user.getPassword());
+
 
       Optional<User> userExisted= userDataAccess.findByEmail(user.getEmail());
       if(userExisted.isPresent()){
@@ -157,47 +160,28 @@ public class AuthService {
         return "signup";
       }
 
-      User newUser = User.builder()
-          .email(user.getEmail())
-          .role(Role.USER)
-          .provider(Provider.LOCAL)
-          .name(user.getName())
-          .password(passwordEncoded)
-          .isUsing2FA(true)
-          .secret(defaultMFATokenManager.generateSecretKey())
-          .build();
-      User userSaved = userDataAccess.save(newUser);
       if (authentication == null) {
-        GrantedAuthority userAuthority = new SimpleGrantedAuthority(Role.USER.name());
-        List<GrantedAuthority> authorities = Collections.singletonList(userAuthority);
 
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-            newUser,
-            null,
-            authorities
-        );
-        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authToken);
-        httpSession.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-            SecurityContextHolder.getContext());
 
+        String key =user.getEmail()+UUID.randomUUID();
+        String passwordEncoded = passwordEncoder.encode(user.getPassword());
         RedisUser redisUser = RedisUser.builder()
-            .id(userSaved.getId())
-            .name(userSaved.getName())
-            .email(userSaved.getEmail())
-            .provider(userSaved.getProvider())
-            .role(userSaved.getRole())
+            .name(user.getName())
+            .email(user.getEmail())
+            .password(passwordEncoded)
+            .provider(Provider.LOCAL)
+            .role(Role.USER)
             .refreshTokenVersion(0)
-            .isUsing2FA(userSaved.getIsUsing2FA())
-            .secret(userSaved.getSecret())
-            .createdAt(userSaved.getCreatedAt())
-            .updatedAt(userSaved.getUpdatedAt())
-
+            .isUsing2FA(false)
+            .secret(null)
+            .createdAt(new Date())
+            .updatedAt(new Date())
             .build();
-        redisDataAccess.save(redisUser);
-        jwtService.writeCookie(redisUser.getRefreshTokenVersion(),newUser.getEmail(), response);
-        httpSession.setAttribute("email",newUser.getEmail());
-        emailService.sendMail(userSaved.getEmail(),"Confirmation","https://google.com");
+        redisDataAccess.saveTemporary(key,redisUser,300);
+
+        httpSession.setAttribute("email",redisUser.getEmail());
+        String token = jwtService.generateToken(key);
+        emailService.sendMail(user.getEmail(),"Confirmation","http://localhost:8080/signup-success?token=" + token);
       }
       return "redirect:/signup-instruction";
     } catch (RuntimeException e) {
@@ -209,18 +193,32 @@ public class AuthService {
   public String signupInstructionView(Authentication authentication,HttpSession httpSession ,Model model) {
     if (httpSession.getAttribute("email") != null) {
       model.addAttribute("email",httpSession.getAttribute("email"));
+      return "signup-instruction";
+    }else{
+      return "redirect:/login";
     }
-    return "signup-instruction";
   }
 
   private String getName(Authentication authentication) {
-    return Optional.of(authentication)
-        .filter(OAuth2AuthenticationToken.class::isInstance)
-        .map(OAuth2AuthenticationToken.class::cast)
-        .map(OAuth2AuthenticationToken::getPrincipal)
-        .map(OidcUser.class::cast)
-        .map(OidcUser::getEmail)
-        .orElseGet(authentication::getName);
+    /*In case login with google but set transform to UsernamePasswordAuthenticationToken
+    * at OAuth2LoginSuccessHandler
+    * */
+    try {
+      OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+      String email = oAuth2User.getAttribute("email");
+      if(email==null  || email.isEmpty()){
+        return "";
+      }
+      return email;
+    } catch (ClassCastException e) {
+      return Optional.of(authentication)
+          .filter(OAuth2AuthenticationToken.class::isInstance)
+          .map(OAuth2AuthenticationToken.class::cast)
+          .map(OAuth2AuthenticationToken::getPrincipal)
+          .map(OidcUser.class::cast)
+          .map(OidcUser::getEmail)
+          .orElseGet(authentication::getName);
+    }
   }
 
   public ResponseEntity<AuthResponse> getProfile(HttpServletRequest request, HttpServletResponse response) {
@@ -258,35 +256,64 @@ public class AuthService {
     }
   }
 
-  public  Object test2Fa(Authentication authentication, Model model) {
+  public  Object toggle2Fa(Authentication authentication, Model model) {
     try {
       if(authentication==null || authentication.getName()==null) throw new ForbiddenException("authentication null");
       String userEmail = getName(authentication);
       if(userEmail==null) throw new UnAuthenticateException("Cannot extract userEmail ["+authentication.getName()+"] from " +
           "authentication");
 
-      Optional<User> userExisting = userDataAccess.findByEmail(userEmail);
-      if (userExisting.isEmpty()) throw new UnAuthenticateException("[Database] User with email [" + userEmail + "] not found");
-
+      Optional<User> userOptional = userDataAccess.findByEmail(userEmail);
+      RedisUser redisUser = redisDataAccess.findRedisUserByEmail(userEmail);
+      if (userOptional.isEmpty()) throw new UnAuthenticateException("[AuthService - toggle2Fa] User with email [" + userEmail +
+          "]" +
+          " " +
+          "not found");
+      if (redisUser==null) throw new UnAuthenticateException("[AuthService - toggle2Fa] Redis user with email [" + userEmail + "]" +
+          " not found");
+      User userExisting = userOptional.get();
       /*All thing good*/
-//      userExisting.get().setIsUsing2FA(!userExisting.get().getIsUsing2FA());
-//      userDataAccess.save(userExisting.get());
 
-
-      MfaTokenData data = new MfaTokenData(defaultMFATokenManager.getQRCode(userExisting.get().getSecret()),
-          userExisting.get().getSecret());
-
-      return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
-          .status(HttpStatus.OK)
-          .data(data)
-          .message("authenticated")
-          .path(null)
-          .accessToken(null)
-          .build());
+      if (userExisting.getIsUsing2FA()) {
+        /*Disable using2Fa*/
+        userExisting.setIsUsing2FA(false);
+        userExisting.setSecret(null);
+        redisUser.setIsUsing2FA(false);
+        redisUser.setSecret(null);
+        redisDataAccess.save(redisUser);
+        userDataAccess.save(userExisting);
+        return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
+            .status(HttpStatus.OK)
+            .data(null)
+            .message("disable multi factor authenticate successfully!")
+            .path(null)
+            .accessToken(null)
+            .build());
+      } else {
+        /*Enable using2Fa*/
+        userExisting.setIsUsing2FA(true);
+        userExisting.setSecret(defaultMFATokenManager.generateSecretKey());
+        redisUser.setIsUsing2FA(true);
+        redisUser.setSecret(defaultMFATokenManager.generateSecretKey());
+        redisDataAccess.save(redisUser);
+        userDataAccess.save(userExisting);
+        MfaTokenData data = new MfaTokenData(defaultMFATokenManager.getQRCode(userExisting.getSecret(),userExisting.getEmail()),
+            userExisting.getSecret());
+        return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
+            .status(HttpStatus.OK)
+            .data(data)
+            .message("enable multi factor authenticate successfully!")
+            .path(null)
+            .accessToken(null)
+            .build());
+      }
     }  catch (ForbiddenException  e) {
       return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.FORBIDDEN, e.getMessage());
     } catch (QrGenerationException e) {
-      throw new RuntimeException(e);
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+    catch (RuntimeException e) {
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
@@ -309,37 +336,102 @@ public class AuthService {
   }
 
   public String verifyMultiFactor(Authentication authentication, Model model, HttpSession httpSession, String numberDigits,
+                                  HttpServletRequest request,
                                   HttpServletResponse response) throws IOException {
     if(!ValidateData.isValidLong(numberDigits)){
       model.addAttribute("verifyError","code invalid");
-      return "login";
+      return "verify-multi-factor";
     }
 
     String userEmail = getName(authentication);
     if (userEmail == null || userEmail.isEmpty()) {
       model.addAttribute("verifyError","userEmail not found from authentication");
-      return "login";
-    }
-
-    RedisUser redisUserExisted = redisDataAccess.findRedisUserByEmail(userEmail);
-    if(redisUserExisted==null) {
-      model.addAttribute("verifyError","Redis user not found with email: " + userEmail);
-      return "login";
-    }
-
-    if(redisUserExisted.getSecret()==null || redisUserExisted.getSecret().isEmpty()) {
-      model.addAttribute("verifyError","Redis user secret is null");
-      return "login";
-    }
-
-    if(!defaultMFATokenManager.verifyTotp(numberDigits,redisUserExisted.getSecret())){
-      model.addAttribute("verifyError","Code invalid or expired");
       return "verify-multi-factor";
     }
 
+    Optional<User> userOptional = userDataAccess.findByEmail(userEmail);
+    RedisUser redisUser = redisDataAccess.findRedisUserByEmail(userEmail);
+    if(userOptional.isEmpty()) {
+      model.addAttribute("verifyError","user not found with email: " + userEmail);
+      return "verify-multi-factor";
+    }
+    if(redisUser==null) {
+      model.addAttribute("verifyError","redis user not found with email: " + userEmail);
+      return "verify-multi-factor";
+    }
+
+    User userExisting = userOptional.get();
+
+    if(userExisting.getSecret()==null || userExisting.getSecret().isEmpty()) {
+      model.addAttribute("verifyError","Redis user secret is null");
+      return "verify-multi-factor";
+    }
+
+    if(!defaultMFATokenManager.verifyTotp(numberDigits,userExisting.getSecret())){
+      model.addAttribute("verifyError","Verify failure! please enter the code on your Google Authenticator App.");
+      return "verify-multi-factor";
+    }
     String redirectUrl = (String) httpSession.getAttribute("redirectUrl");
-    return redirectUrl == null ? "dashboard" : redirectUrl;
+    if (redirectUrl == null) {
+        GrantedAuthority userAuthority = new SimpleGrantedAuthority(Role.USER.name());
+        List<GrantedAuthority> authorities = Collections.singletonList(userAuthority);
+
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+            userExisting,
+            null,
+            authorities
+        );
+        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+        httpSession.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+
+        redisUser.setRefreshTokenVersion(redisUser.getRefreshTokenVersion()+1);
+        redisDataAccess.save(redisUser);
+        jwtService.writeCookie(redisUser.getRefreshTokenVersion(),authentication.getName(),response);
+
+      return "redirect:/dashboard";
+    }else{
+      return redirectUrl;
+    }
   }
+  public String signupSuccessView(Authentication authentication,HttpSession httpSession,Model model, String token,
+                                  HttpServletRequest request,
+                                  HttpServletResponse response) {
+    if(token==null) return "login";
+    String key = jwtService.extractUsername(token);
+    if(key==null) return "login";
 
+    RedisUser redisUser = redisDataAccess.findUserTemporaryByKey(key);
+    if(redisUser==null) return "login";
 
+    User newUser = User.builder()
+          .email(redisUser.getEmail())
+          .role(Role.USER)
+          .provider(Provider.LOCAL)
+          .name(redisUser.getName())
+          .password(redisUser.getPassword())
+          .isUsing2FA(false)
+          .secret(null)
+          .build();
+    User userSave = userDataAccess.save(newUser);
+    redisUser.setId(userSave.getId());
+    if(authentication==null){
+              GrantedAuthority userAuthority = new SimpleGrantedAuthority(Role.USER.name());
+        List<GrantedAuthority> authorities = Collections.singletonList(userAuthority);
+
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+            newUser,
+            null,
+            authorities
+        );
+        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+        httpSession.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+    }
+  model.addAttribute("email",newUser.getEmail());
+    jwtService.writeCookie(redisUser.getRefreshTokenVersion(),newUser.getEmail(), response);
+    redisDataAccess.deleteUserTemporary(key);
+    redisDataAccess.save(redisUser);
+    return "redirect:/dashboard";
+  }
 }

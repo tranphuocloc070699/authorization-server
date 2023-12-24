@@ -12,7 +12,11 @@
             type="text/css"
             th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
     />
+    <link rel="stylesheet" type="text/css" th:href="@{/fontawesome/all.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/reset.css}" />
     <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/verify-multi-factor.css}" />
+
     <script
             type="text/javascript"
             th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"
@@ -23,35 +27,168 @@
     ></script>
     <title>Verify Multi Factor</title>
 </head>
-<body>
-<div class="otp-field mb-4">
-    <input type="number" />
-    <input type="number" disabled />
-    <input type="number" disabled />
-    <input type="number" disabled />
-    <input type="number" disabled />
-    <input type="number" disabled />
-</div>
-<p th:text="${verifyError}"></p>
-<form th:action="@{/verify-multi-factor}" method="post">
-    <input id="number-digits" name="numberDigits" placeholder="enter number" >
-    <button id="verify__btn" type="submit" >Verify</button>
-</form>
-<script type="text/javascript">
-<!--    $(document).ready(function () {-->
-<!--  $("#verify__btn").on("click", function () {-->
-<!--      console.log('1231231312');-->
-<!--          const numberValue = $('#number-digits').val();-->
-<!--          const url = "[[@{/auth/verify2fa}]]";-->
+<!--<body>-->
+<!--<div class="otp-field mb-4">-->
+<!--    <input type="number" />-->
+<!--    <input type="number" disabled />-->
+<!--    <input type="number" disabled />-->
+<!--    <input type="number" disabled />-->
+<!--    <input type="number" disabled />-->
+<!--    <input type="number" disabled />-->
+<!--</div>-->
+<!--<p th:text="${verifyError}"></p>-->
+<!--<form th:action="@{/verify-multi-factor}" method="post">-->
+<!--    <input id="number-digits" name="numberDigits" placeholder="enter number" >-->
+<!--    <button id="verify__btn" type="submit" >Verify</button>-->
+<!--</form>-->
+<!--<script type="text/javascript">-->
+<!--&lt;!&ndash;    $(document).ready(function () {&ndash;&gt;-->
+<!--&lt;!&ndash;  $("#verify__btn").on("click", function () {&ndash;&gt;-->
+<!--&lt;!&ndash;      console.log('1231231312');&ndash;&gt;-->
+<!--&lt;!&ndash;          const numberValue = $('#number-digits').val();&ndash;&gt;-->
+<!--&lt;!&ndash;          const url = "[[@{/auth/verify2fa}]]";&ndash;&gt;-->
 
-<!--          params = { numberValue};-->
-<!--          $.post(url, params, function (response) {-->
-<!--              console.log({response})-->
-<!--            }).fail(function () {-->
-<!--              console.error('can not connect to server')-->
-<!--            });-->
-<!--      });-->
-<!--    });-->
+<!--&lt;!&ndash;          params = { numberValue};&ndash;&gt;-->
+<!--&lt;!&ndash;          $.post(url, params, function (response) {&ndash;&gt;-->
+<!--&lt;!&ndash;              console.log({response})&ndash;&gt;-->
+<!--&lt;!&ndash;            }).fail(function () {&ndash;&gt;-->
+<!--&lt;!&ndash;              console.error('can not connect to server')&ndash;&gt;-->
+<!--&lt;!&ndash;            });&ndash;&gt;-->
+<!--&lt;!&ndash;      });&ndash;&gt;-->
+<!--&lt;!&ndash;    });&ndash;&gt;-->
+<!--</script>-->
+<!--</body>-->
+
+<body>
+<div
+        class="container height-100 d-flex justify-content-center align-items-center"
+>
+    <div class="position-relative">
+        <div class="card p-2 text-center">
+            <h6>
+                Please enter the one time password <br />
+                to verify your account
+            </h6>
+            <div class="multi-fa-notice">
+                <p>A code has been generate from your Google Authenticator App</p>
+            </div>
+            <form
+                    id="otp"
+                    class="inputs d-flex flex-row justify-content-center mt-2"
+                    method="post"
+                    th:action="@{/verify-multi-factor}"
+            >
+                <input
+                        class="m-2 text-center form-control rounded"
+                        type="text"
+                        id="first"
+                        name="first"
+                        maxlength="1"
+                />
+                <input
+                        class="m-2 text-center form-control rounded"
+                        type="text"
+                        id="second"
+                        name="second"
+                        maxlength="1"
+                />
+                <input
+                        class="m-2 text-center form-control rounded"
+                        type="text"
+                        id="third"
+                        name="third"
+                        maxlength="1"
+                />
+                <input
+                        class="m-2 text-center form-control rounded"
+                        type="text"
+                        id="fourth"
+                        name="fourth"
+                        maxlength="1"
+                />
+                <input
+                        class="m-2 text-center form-control rounded"
+                        type="text"
+                        id="fifth"
+                        name="fifth"
+                        maxlength="1"
+                />
+                <input
+                        class="m-2 text-center form-control rounded"
+                        type="text"
+                        id="sixth"
+                        name="sixth"
+                        maxlength="1"
+                />
+            </form>
+            <p th:text="${verifyError}" class="mt-4 multi-fa-validate-fail block">
+<!--                Validation fail, check your code or contact to administrator if your code you typing match with your code on Google Authenticator App.-->
+            </p>
+            <div class="mt-4">
+                <button  class="multi-fa-verifier-btn__submit" id="btn__submit">VERIFY</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function (event) {
+    function OTPInput() {
+      const inputs = $("#otp > *[id]");
+      for (let i = 0; i < inputs.length; i++) {
+        $(inputs[i]).on("keydown", function (event) {
+        $('.multi-fa-validate-fail').removeClass('block');
+          if (event.key === "Backspace") {
+            inputs[i].value = "";
+            if (i !== 0) inputs[i - 1].focus();
+          } else {
+            if (i === inputs.length - 1 && inputs[i].value !== "") {
+              return true;
+            } else if (event.keyCode > 47 && event.keyCode < 58) {
+              inputs[i].value = event.key;
+              if (i !== inputs.length - 1) inputs[i + 1].focus();
+              event.preventDefault();
+            } else if (event.keyCode > 64 && event.keyCode < 91) {
+              inputs[i].value = String.fromCharCode(event.keyCode);
+              if (i !== inputs.length - 1) inputs[i + 1].focus();
+              event.preventDefault();
+            }
+          }
+        });
+      }
+    }
+    OTPInput();
+
+<!--    $('#btn__submit').click(function(e){-->
+<!--        const first = $('#first').val();-->
+<!--        const second = $('#second').val();-->
+<!--        const third = $('#third').val();-->
+<!--        const fourth = $('#fourth').val();-->
+<!--        const fifth = $('#fifth').val();-->
+<!--        const sixth = $('#sixth').val();-->
+
+<!--        const code = `${first}${second}${third}${fourth}${fifth}${sixth}`-->
+<!--        console.log({code:code.length})-->
+
+<!--        if(code.length<6){-->
+<!--            $('.multi-fa-validate-fail').addClass('block');-->
+<!--            return;-->
+<!--        }-->
+<!--        if(!isNumeric(code)){-->
+<!--            $('.multi-fa-validate-fail').addClass('block');-->
+<!--            return;-->
+<!--        }-->
+<!--    })-->
+
+$('#btn__submit').click(function(e){
+        $('#otp').submit();
+})
+  });
+
+  function isNumeric(str) {
+    if (typeof str != "string") return false // we only process strings!
+    return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+           !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+  }
 </script>
 </body>
 </html>

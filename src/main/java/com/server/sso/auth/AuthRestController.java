@@ -1,21 +1,18 @@
 package com.server.sso.auth;
 
-import com.server.sso.exception.customs.ForbiddenException;
-import com.server.sso.exception.customs.UnAuthenticateException;
-import com.server.sso.shared.AuthResponseException;
-import com.server.sso.user.User;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.repository.query.Param;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("auth")
@@ -29,15 +26,13 @@ public class AuthRestController {
     return authService.authenticate(request,response);
   }
 
-  @GetMapping("2fa")
-  public Object toggle2Fa(Authentication authentication, Model model){
-    return authService.test2Fa(authentication,model);
+  @PutMapping("2fa/toggle")
+  public Object enable2Fa(Authentication authentication, Model model){
+    return authService.toggle2Fa(authentication,model);
   }
 
   @PostMapping("verify2fa")
   public Object verify2Fa(@RequestParam("numberValue") String value,Authentication authentication,Model model) {
-
-
     return authService.verifyTest2Fa(authentication,value,model);
   }
 

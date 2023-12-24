@@ -1,22 +1,23 @@
 package com.server.sso.security.handlers;
 
+import java.io.IOException;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+
 import com.server.sso.redis.RedisDataAccess;
 import com.server.sso.redis.RedisUser;
 import com.server.sso.security.JwtService;
+import com.server.sso.user.UserDataAccess;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
@@ -29,6 +30,7 @@ public class UsernameAndPasswordLoginSuccessHandler implements AuthenticationSuc
     String redirectUrl = (String) request.getSession().getAttribute("redirectUrl");
 
     RedisUser redisUser = redisDataAccess.findRedisUserByEmail(authentication.getName());
+
     if(redisUser==null){
 
       UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -57,6 +59,7 @@ public class UsernameAndPasswordLoginSuccessHandler implements AuthenticationSuc
     }
 
     redisUser.setRefreshTokenVersion(redisUser.getRefreshTokenVersion()+1);
+    redisDataAccess.save(redisUser);
     jwtService.writeCookie(redisUser.getRefreshTokenVersion(),authentication.getName(),response);
 
     response.sendRedirect(redirectUrl != null ? redirectUrl : "/dashboard");

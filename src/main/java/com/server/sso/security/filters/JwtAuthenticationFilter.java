@@ -1,27 +1,27 @@
 package com.server.sso.security.filters;
 
-import com.server.sso.auth.AuthService;
+import java.io.IOException;
+import java.util.Optional;
+
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import com.server.sso.security.JwtService;
 import com.server.sso.shared.Constant;
+
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.lang.NonNull;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.security.core.userdetails.UserDetails;
-import java.io.IOException;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -38,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       if(request.getHeader("X-Rest-Api")!=null){
 
       }else{
+        /* Check when enter login or sign up page -> have refreshToken -> redirect to dashboard page  */
         Optional<String> refreshTokenOptional = jwtService.readServletCookie(request,CONST.JWT_REFRESH_TOKEN_NAME);
         if(refreshTokenOptional.isPresent()){
           String refreshToken = refreshTokenOptional.get();
@@ -58,6 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
       }
     }catch (UsernameNotFoundException exception){
+      System.err.println("JwtAuthenticationFilter Exception: " + exception.getMessage());
       jwtService.removeCookie(CONST.JWT_REFRESH_TOKEN_NAME,response);
     }
     filterChain.doFilter(request,response);

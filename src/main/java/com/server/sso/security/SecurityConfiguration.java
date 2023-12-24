@@ -1,9 +1,5 @@
 package com.server.sso.security;
 
-import com.server.sso.security.filters.JwtAuthenticationFilter;
-import com.server.sso.security.handlers.*;
-import com.server.sso.shared.Constant;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,10 +11,15 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.server.sso.security.filters.JwtAuthenticationFilter;
+import com.server.sso.security.handlers.OAuth2LoginFailureHandler;
+import com.server.sso.security.handlers.OAuth2LoginSuccessHandler;
+import com.server.sso.security.handlers.UsernameAndPasswordLoginFailureHandler;
+import com.server.sso.security.handlers.UsernameAndPasswordLoginSuccessHandler;
+import com.server.sso.security.handlers.UsernameAndPasswordLogoutSuccessHandler;
+import com.server.sso.shared.Constant;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -26,8 +27,6 @@ import java.util.stream.Collectors;
 public class SecurityConfiguration {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
-  private final JwtService jwtService;
-  private final Constant CONST;
   private final UsernameAndPasswordLoginSuccessHandler usernameAndPasswordLoginSuccessHandler;
   private final UsernameAndPasswordLoginFailureHandler usernameAndPasswordLoginFailureHandler;
   private final UsernameAndPasswordLogoutSuccessHandler usernameAndPasswordLogoutSuccessHandler;
@@ -44,7 +43,10 @@ public class SecurityConfiguration {
                 "/verify-multi-factor/**",
                 "/users/**",
                 "/auth/**",
-                "/swagger" + "-ui/**", "/v3" + "/api" + "-docs/**")
+                "/swagger" + "-ui/**", "/v3" + "/api" + "-docs/**",
+                    "/signup-instruction/**",
+                    "/signup-success/**",
+                    "/verify-multi-factor/**")
                 .permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**","/fontawesome/**","/webfonts/**").permitAll()
                 .anyRequest()

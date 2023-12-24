@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="../src/main/resources/static/css/styles.css" />
     <link
       rel="stylesheet"
-      href="../src/main/resources/static/css/multi-fa-verifier.css"
+      href="../src/main/resources/static/css/verify-multi-factor.css"
     />
     <title>Dashboard Page</title>
   </head>
@@ -45,47 +45,55 @@
           <div class="multi-fa-notice">
             <p>A code has been generate from your Google Authenticator App</p>
           </div>
-          <div
+          <form
             id="otp"
             class="inputs d-flex flex-row justify-content-center mt-2"
+            method="post"
+            th:action="@{/verify-multi-factor}"
           >
             <input
               class="m-2 text-center form-control rounded"
               type="text"
               id="first"
+              name="first"
               maxlength="1"
             />
             <input
               class="m-2 text-center form-control rounded"
               type="text"
               id="second"
+              name="second"
               maxlength="1"
             />
             <input
               class="m-2 text-center form-control rounded"
               type="text"
               id="third"
+              name="third"
               maxlength="1"
             />
             <input
               class="m-2 text-center form-control rounded"
               type="text"
               id="fourth"
+              name="fourth"
               maxlength="1"
             />
             <input
               class="m-2 text-center form-control rounded"
               type="text"
               id="fifth"
+              name="fifth"
               maxlength="1"
             />
             <input
               class="m-2 text-center form-control rounded"
               type="text"
               id="sixth"
+              name="sixth"
               maxlength="1"
             />
-          </div>
+          </form>
           <div class="mt-4 multi-fa-validate-fail">
             Validation fail, check your code or contact to administrator if your code you typing match with your code on Google Authenticator App.
           </div>
