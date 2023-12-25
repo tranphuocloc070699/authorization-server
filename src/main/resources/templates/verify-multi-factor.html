@@ -27,38 +27,6 @@
     ></script>
     <title>Verify Multi Factor</title>
 </head>
-<!--<body>-->
-<!--<div class="otp-field mb-4">-->
-<!--    <input type="number" />-->
-<!--    <input type="number" disabled />-->
-<!--    <input type="number" disabled />-->
-<!--    <input type="number" disabled />-->
-<!--    <input type="number" disabled />-->
-<!--    <input type="number" disabled />-->
-<!--</div>-->
-<!--<p th:text="${verifyError}"></p>-->
-<!--<form th:action="@{/verify-multi-factor}" method="post">-->
-<!--    <input id="number-digits" name="numberDigits" placeholder="enter number" >-->
-<!--    <button id="verify__btn" type="submit" >Verify</button>-->
-<!--</form>-->
-<!--<script type="text/javascript">-->
-<!--&lt;!&ndash;    $(document).ready(function () {&ndash;&gt;-->
-<!--&lt;!&ndash;  $("#verify__btn").on("click", function () {&ndash;&gt;-->
-<!--&lt;!&ndash;      console.log('1231231312');&ndash;&gt;-->
-<!--&lt;!&ndash;          const numberValue = $('#number-digits').val();&ndash;&gt;-->
-<!--&lt;!&ndash;          const url = "[[@{/auth/verify2fa}]]";&ndash;&gt;-->
-
-<!--&lt;!&ndash;          params = { numberValue};&ndash;&gt;-->
-<!--&lt;!&ndash;          $.post(url, params, function (response) {&ndash;&gt;-->
-<!--&lt;!&ndash;              console.log({response})&ndash;&gt;-->
-<!--&lt;!&ndash;            }).fail(function () {&ndash;&gt;-->
-<!--&lt;!&ndash;              console.error('can not connect to server')&ndash;&gt;-->
-<!--&lt;!&ndash;            });&ndash;&gt;-->
-<!--&lt;!&ndash;      });&ndash;&gt;-->
-<!--&lt;!&ndash;    });&ndash;&gt;-->
-<!--</script>-->
-<!--</body>-->
-
 <body>
 <div
         class="container height-100 d-flex justify-content-center align-items-center"
@@ -143,13 +111,16 @@
           } else {
             if (i === inputs.length - 1 && inputs[i].value !== "") {
               return true;
-            } else if (event.keyCode > 47 && event.keyCode < 58) {
+            } 
+            else if (event.keyCode > 47 && event.keyCode < 58 || event.keyCode>=96 && event.keyCode<=105) {
               inputs[i].value = event.key;
               if (i !== inputs.length - 1) inputs[i + 1].focus();
               event.preventDefault();
-            } else if (event.keyCode > 64 && event.keyCode < 91) {
-              inputs[i].value = String.fromCharCode(event.keyCode);
-              if (i !== inputs.length - 1) inputs[i + 1].focus();
+            } 
+            else if (event.keyCode > 64 && event.keyCode < 91) {
+<!--              inputs[i].value = String.fromCharCode(event.keyCode);-->
+<!--              if (i !== inputs.length - 1) inputs[i + 1].focus();-->
+ inputs[i].value = '0';
               event.preventDefault();
             }
           }

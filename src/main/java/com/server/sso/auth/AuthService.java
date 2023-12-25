@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.server.sso.mail.MailSenderDto;
+import com.server.sso.queue.producers.RabbitMQDbProducer;
+import com.server.sso.queue.producers.RabbitMQMailProducer;
+import jakarta.servlet.RequestDispatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
@@ -61,7 +65,8 @@ public class AuthService {
   private final RedisDataAccess redisDataAccess;
   private final DefaultMFATokenManager defaultMFATokenManager;
   private final EmailServiceImpl emailService;
-
+  private final RabbitMQDbProducer rabbitMQDbProducer;
+  private final RabbitMQMailProducer rabbitMQMailProducer;
   /* === Authenticate Route === */
   public ResponseEntity<AuthResponse> authenticate(HttpServletRequest request,
                                                    HttpServletResponse response) {
@@ -181,7 +186,13 @@ public class AuthService {
 
         httpSession.setAttribute("email",redisUser.getEmail());
         String token = jwtService.generateToken(key);
-        emailService.sendMail(user.getEmail(),"Confirmation","http://localhost:8080/signup-success?token=" + token);
+        MailSenderDto dto = MailSenderDto.builder()
+            .to(user.getEmail())
+            .subject("Confirmation")
+            .confirmationLink("http://localhost:8080/signup-success?token=" + token)
+            .build();
+        rabbitMQMailProducer.sendMailRequest(dto);
+//        emailService.sendMail(user.getEmail(),"Confirmation","http://localhost:8080/signup-success?token=" + token);
       }
       return "redirect:/signup-instruction";
     } catch (RuntimeException e) {
@@ -331,7 +342,14 @@ public class AuthService {
 
   }
 
-  public String verifyMultiFactorView(Authentication authentication, Model model,String redirectUrl) {
+  public String verifyMultiFactorView(Authentication authentication, Model model,String redirectUrl,HttpServletRequest request) {
+    if (authentication == null) {
+//      Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+//      String errorMessage = (String) request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
+      request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE,HttpStatus.NOT_FOUND);
+      request.setAttribute(RequestDispatcher.ERROR_MESSAGE,"Page not found");
+      return "redirect:/error";
+    }
     return "verify-multi-factor";
   }
 
@@ -414,6 +432,7 @@ public class AuthService {
           .secret(null)
           .build();
     User userSave = userDataAccess.save(newUser);
+    rabbitMQDbProducer.sendSaveUserRequestToPostgres(userSave);
     redisUser.setId(userSave.getId());
     if(authentication==null){
               GrantedAuthority userAuthority = new SimpleGrantedAuthority(Role.USER.name());

@@ -45,8 +45,8 @@ public class AuthController {
 
   @GetMapping("/verify-multi-factor")
   public String verifyMultiFactorView(Authentication authentication, Model model,
-      @Param("redirectUrl") String redirectUrl) {
-    return authService.verifyMultiFactorView(authentication, model, redirectUrl);
+      @Param("redirectUrl") String redirectUrl,HttpServletRequest request) {
+    return authService.verifyMultiFactorView(authentication, model, redirectUrl,request);
   }
 
   @GetMapping("/signup-instruction")
