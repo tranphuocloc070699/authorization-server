@@ -1,6 +1,7 @@
 package com.server.sso.security.multiFactor;
 import java.io.IOException;
 
+import com.server.sso.shared.Constant;
 import org.springframework.stereotype.Service;
 
 import com.google.zxing.BarcodeFormat;
@@ -25,81 +26,41 @@ import lombok.RequiredArgsConstructor;
 @Service("mfaTokenManager")
 @RequiredArgsConstructor
 public class DefaultMFATokenManager implements MFATokenManager {
-  private final SecretGenerator secretGenerator = new SecretGenerator() {
-    @Override
-    public String generate() {
-      return RandomData.generateRandomBase32();
-    }
-  };
-  private final QrGenerator qrGenerator = new QrGenerator() {
-    @Override
-    public String getImageMimeType() {
-      return "image/png";
-    }
 
-    @Override
-    public byte[] generate(QrData qrData) throws QrGenerationException {
-//      try {
-//        // Example: Generating a simple QR code with ZXing library
-//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//        BitMatrix bitMatrix = new QRCodeWriter().encode(qrData.getSecret(), BarcodeFormat.QR_CODE, 200, 200);
-//        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
-//        return outputStream.toByteArray();
-//      } catch (WriterException | IOException e) {
-//        throw new QrGenerationException("Error generating QR code", e);
-//      }
-      try {
-      QRCodeWriter writer = new QRCodeWriter();
-      String issuer = "SSO";
-      String email = "user@example.com";
-      String secret = qrData.getSecret();
-      String otpAuthUri = "otpauth://totp/" + qrData.getIssuer() + "?secret=" + secret + "&issuer=" + issuer;
-        BitMatrix  matrix = writer.encode(otpAuthUri, BarcodeFormat.QR_CODE, 300, 300);
-        return TransferData.bufferedImageToBytes(MatrixToImageWriter.toBufferedImage(matrix));
-      } catch (WriterException | IOException e ) {
-        throw new QrGenerationException("Error generating QR code", e);
-      }
-    }
-  };
-  private final CodeVerifier codeVerifier = new CodeVerifier() {
-    @Override
-    public boolean isValidCode(String code, String secret) {
-//      GoogleAuthenticatorConfig config = new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
-//          .setWindowSize(5) // Adjust the window size to a larger value, default is 3
-//          .setTimeStepSizeInMillis(30000) // Default is 30 seconds, adjust as needed
-//          .build();
-      GoogleAuthenticator gAuth = new GoogleAuthenticator();
-      // Create a GoogleAuthenticatorKey using the user's secret key
-      GoogleAuthenticatorKey key = new GoogleAuthenticatorKey.Builder(secret).build();
-      long allowedTimeDrift =  30 * 1000;
-      // Verify the user-entered TOTP
-      boolean isCodeValid = gAuth.authorize(key.getKey(), Integer.parseInt(code),System.currentTimeMillis()+allowedTimeDrift);
-      return isCodeValid;
-    }
-  };
+  private final Constant CONST;
+  private final MFAService mfaService;
 
+  /*
+  * Uses: Generate Secret -> Save to user database
+  * */
   @Override
   public String generateSecretKey() {
-    return secretGenerator.generate();
+    return mfaService.secretGenerator.generate();
   }
 
+  /*
+  * Uses: Generate QrCode -> client will scan this qr to Google Authenticator App
+  * */
   @Override
   public String getQRCode(String secret,String email) throws QrGenerationException {
-    QrData data = new QrData.Builder().label("MFA")
+    QrData data = new QrData.Builder().label(CONST.APP_2FA_LABEL)
         .secret(secret)
-        .issuer("SSO:"+email)
+        .issuer(CONST.APP_2FA_ISSUER+email)
         .algorithm(HashingAlgorithm.SHA256)
         .digits(6)
         .period(30)
         .build();
     return Utils.getDataUriForImage(
-        qrGenerator.generate(data),
-        qrGenerator.getImageMimeType()
+        mfaService.qrGenerator.generate(data),
+        mfaService.qrGenerator.getImageMimeType()
     );
   }
 
+  /*
+   * Uses: Verify OTP -> client will enter otp from Google Authenticator App to verify with secret that save in user database
+   * */
   @Override
   public boolean verifyTotp(String code, String secret) {
-    return codeVerifier.isValidCode(code, secret);
+    return mfaService.codeVerifier.isValidCode(code, secret);
   }
 }

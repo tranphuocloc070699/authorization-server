@@ -9,9 +9,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Getter
 @Setter
-public class MfaTokenData implements Serializable {
+public class MFATokenData implements Serializable {
 
   private String qrCode;
   private String mfaCode;
-  //getter and setter
 }

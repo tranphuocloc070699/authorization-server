@@ -35,10 +35,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                   @NonNull HttpServletResponse response,
                                   @NonNull FilterChain filterChain) throws ServletException, IOException, JwtException {
     try{
+
       if(request.getHeader("X-Rest-Api")!=null){
+        /*Rest Api */
 
       }else{
-        /* Check when enter login or sign up page -> have refreshToken -> redirect to dashboard page  */
+        /*
+        * Read cookie
+        *   - Cookie exist
+        *     - True: Check Jwt (extractUsername,isTokenValid)
+        *       - Valid: get user from database (loadUserByUsername) & set user to Authenticate
+        *   doFilter
+        * */
         Optional<String> refreshTokenOptional = jwtService.readServletCookie(request,CONST.JWT_REFRESH_TOKEN_NAME);
         if(refreshTokenOptional.isPresent()){
           String refreshToken = refreshTokenOptional.get();
@@ -53,7 +61,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
               );
               authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
               SecurityContextHolder.getContext().setAuthentication(authToken);
-
             }
           }
         }

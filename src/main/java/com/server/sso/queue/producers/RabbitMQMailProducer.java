@@ -1,6 +1,7 @@
 package com.server.sso.queue.producers;
 
 import com.server.sso.mail.MailSenderDto;
+import com.server.sso.shared.Constant;
 import com.server.sso.user.User;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -15,17 +16,14 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class RabbitMQMailProducer {
-  @Value("${app.rabbitmq.exchange}")
-  String exchange;
 
-  @Value("${app.rabbitmq.mail.routingkey}")
-  private String routingkey;
-
+  private final Constant CONST;
   private final RabbitTemplate rabbitTemplate;
-  private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQMailProducer.class);
 
+  /*
+   * Uses: Sending mail dto to RabbitMQ Broker (Consumer send mail to specific mail)
+   * */
   public void sendMailRequest(MailSenderDto dto) {
-    LOGGER.info(String.format("Sending Mail To: %s",dto.getTo()));
-    rabbitTemplate.convertAndSend(exchange,routingkey,dto);
+    rabbitTemplate.convertAndSend(CONST.RABBITMQ_EXCHANGE,CONST.RABBITMQ_MAIL_ROUTING_KEY,dto);
   }
 }

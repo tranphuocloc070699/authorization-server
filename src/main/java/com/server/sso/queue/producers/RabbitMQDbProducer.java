@@ -1,5 +1,6 @@
 package com.server.sso.queue.producers;
 
+import com.server.sso.shared.Constant;
 import com.server.sso.user.User;
 import com.server.sso.user.UserDataAccess;
 import lombok.RequiredArgsConstructor;
@@ -12,17 +13,14 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class RabbitMQDbProducer {
-  @Value("${app.rabbitmq.exchange}")
-  String exchange;
 
-  @Value("${app.rabbitmq.db.routingkey}")
-  private String routingkey;
-
+  private final Constant CONST;
   private final RabbitTemplate rabbitTemplate;
-  private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQDbProducer.class);
 
+  /*
+   * Uses: Sending user entity to RabbitMQ Broker (Consumer save this user to postgresql database)
+   * */
   public void sendSaveUserRequestToPostgres(User user) {
-    LOGGER.info(String.format("Save User To Postgresql Database: %s",user));
-    rabbitTemplate.convertAndSend(exchange,routingkey,user);
+    rabbitTemplate.convertAndSend(CONST.RABBITMQ_EXCHANGE,CONST.RABBITMQ_DB_ROUTING_KEY,user);
   }
 }

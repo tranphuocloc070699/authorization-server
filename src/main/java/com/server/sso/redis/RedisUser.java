@@ -19,9 +19,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@RedisHash(value = "User",timeToLive = 60)
+@RedisHash(value = "User")
 public class RedisUser implements Serializable {
-//  private static final long serialVersionUID = 5749161485682157558L;
   @Id
   private String id;
   private String email;
@@ -34,5 +33,4 @@ public class RedisUser implements Serializable {
   private String secret;
   private Date createdAt;
   private Date updatedAt;
-  private Long expiration;
 }

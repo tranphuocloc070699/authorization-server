@@ -10,7 +10,10 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 public class CustomErrorController implements ErrorController {
-
+  /*
+  * Scope: Private [Authenticated]
+  * Uses: Custom error page
+  * */
   @RequestMapping("/error")
   public String handleError(HttpServletRequest request, Model model) {
     Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);

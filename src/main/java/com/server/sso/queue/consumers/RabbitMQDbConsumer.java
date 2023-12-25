@@ -11,11 +11,13 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class RabbitMQDbConsumer {
-  private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQDbConsumer.class);
   private final UserDataAccess userDataAccess;
+
+  /*
+   * Uses: Receive user entity from producers and save to database (postgresql)
+   * */
   @RabbitListener(queues = {"${app.rabbitmq.db.queue}"})
   public void saveUserToPostgres (User user) {
-    LOGGER.info(String.format("receive user -> %s",user.toString()));
     userDataAccess.save(user);
   }
 }

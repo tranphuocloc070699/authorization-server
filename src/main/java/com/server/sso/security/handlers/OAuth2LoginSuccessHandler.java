@@ -34,11 +34,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
       throws IOException, ServletException {
     String redirectUrl = (String) request.getSession().getAttribute("redirectUrl");
     /*
-     * If user exist in redis -> user already signup
+     * Condition: If user exist in redis -> user already signup
      * Case 1 : already signup
      *        -> login
      * Case 2 : not signup
-     *        -> like username and password signup
+     *        -> implement like username and password signup
      * */
     OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
     String name = oAuth2User.getAttribute("name");
@@ -46,13 +46,21 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     Optional<User> userExisted = userDataAccess.findByEmail(email);
     if (userExisted.isPresent()) {
-      /*Login case*/
+      /*
+      * Case: LOGIN
+      * - Get redis user:
+      *   - Null: Internal Server Error (because signup already save new redis user)
+      * - using2Fa:
+      *   - True: Set principal to SecurityContextHolder (to get name in verify-multi-factor)
+      *           Navigate to verify-multi-factor page
+      *   - False: Redirect to dashboard or redirectUrl (depend on redirectUrl params)
+      *            Write cookie to request
+      * */
       RedisUser redisUser = redisDataAccess.findRedisUserByEmail(email);
       if (redisUser == null) {
         /*When signup, redis user is already exist -> Call api notify new error*/
         System.err.println("Cannot read user from redis : " + redisUser.toString());
       }
-
       if (redisUser.getIsUsing2FA()) {
       UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
           authentication.getPrincipal(),
@@ -61,20 +69,23 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
       SecurityContextHolder.getContext().setAuthentication(authToken);
       if (redirectUrl != null) {
         response.sendRedirect("/verify-multi-factor?redirectUrl=" + redirectUrl);
-
       }else{
         response.sendRedirect("/verify-multi-factor");
       }
        return;
     }
-
       redisUser.setRefreshTokenVersion(redisUser.getRefreshTokenVersion() + 1);
       redisDataAccess.save(redisUser);
       jwtService.writeCookie(redisUser.getRefreshTokenVersion(), email, response);
-
-      
     } else {
-      /*Signup case*/
+      /*
+       * Case: SIGNUP
+       * - Create new user
+       * - Save new user
+       * - Create new redis user
+       * - Save new redis user (for cached)
+       * - Write cookie to request
+       * */
       User newUser = User.builder()
           .email(email)
           .role(Role.USER)

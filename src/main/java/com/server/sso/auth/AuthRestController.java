@@ -19,25 +19,34 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthRestController {
 
+  private final AuthRestService authRestService;
   private final AuthService authService;
 
+  /*
+   * Scope: Public [Authenticated]
+   * Uses: Get access token from refresh token
+   * */
   @GetMapping("authenticate")
   public ResponseEntity<AuthResponse> authenticate(HttpServletRequest request, HttpServletResponse response){
-    return authService.authenticate(request,response);
+    return authRestService.authenticate(request,response);
   }
 
-  @PutMapping("2fa/toggle")
-  public Object enable2Fa(Authentication authentication, Model model){
-    return authService.toggle2Fa(authentication,model);
-  }
-
-  @PostMapping("verify2fa")
-  public Object verify2Fa(@RequestParam("numberValue") String value,Authentication authentication,Model model) {
-    return authService.verifyTest2Fa(authentication,value,model);
-  }
-
+  /*
+   * Scope: Public [Authenticated]
+   * Uses: Get user info from access token
+   * Notes: access token store in headers
+   * */
   @GetMapping("profile")
   public ResponseEntity<AuthResponse> getProfile(HttpServletRequest request, HttpServletResponse response){
-    return authService.getProfile(request,response);
+    return authRestService.getProfile(request,response);
+  }
+
+  /*
+   * Scope: Private [Authenticated]
+   * Uses: Toggle Google Multi Factor Authenticate
+   * */
+  @PutMapping("2fa/toggle")
+  public Object enable2Fa(Authentication authentication, Model model){
+    return authRestService.toggle2Fa(authentication,model);
   }
 }

@@ -32,23 +32,29 @@ public class SecurityConfiguration {
   private final UsernameAndPasswordLogoutSuccessHandler usernameAndPasswordLogoutSuccessHandler;
   private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
   private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
     httpSecurity
         .csrf(AbstractHttpConfigurer::disable)
         .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(
-            auth -> auth.requestMatchers("/oauth2/**", "/login/**",
-                "/signup/**",
-                "/verify-multi-factor/**",
-                "/users/**",
-                "/auth/**",
-                "/swagger" + "-ui/**", "/v3" + "/api" + "-docs/**",
+            auth -> auth.requestMatchers("/oauth2/**",
+                    "/login/**",
+                    "/signup/**",
+                    "/verify-multi-factor/**",
+                    "/users/**",
+                    "/auth/**",
                     "/signup-instruction/**",
                     "/signup-success/**",
                     "/verify-multi-factor/**")
                 .permitAll()
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**","/fontawesome/**","/webfonts/**").permitAll()
+                .requestMatchers("/css/**",
+                    "/js/**",
+                    "/images/**",
+                    "/webjars/**",
+                    "/fontawesome/**",
+                    "/webfonts/**").permitAll()
                 .anyRequest()
                 .authenticated())
 
@@ -85,11 +91,9 @@ public class SecurityConfiguration {
     return source;
   }
 
-
-
-
-//  @Bean
-//  public WebSecurityCustomizer webSecurityCustomizer() {
-//    return (web) -> web.ignoring().requestMatchers("/auth/**");
-//  }
+  /*
+  @Bean
+  public WebSecurityCustomizer webSecurityCustomizer() {
+    return (web) -> web.ignoring().requestMatchers("/auth/**");
+  }*/
 }

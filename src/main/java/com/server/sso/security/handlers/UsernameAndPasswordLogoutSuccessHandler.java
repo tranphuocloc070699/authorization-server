@@ -27,6 +27,13 @@ public class UsernameAndPasswordLogoutSuccessHandler implements LogoutSuccessHan
   @Override
   public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
       throws IOException, ServletException {
+    /*
+     * Case: LOGOUT
+     * - Check cookie
+     *    - Exist: Remove cookie
+     * - Check SecurityContextHolder
+     *    - True: clear -> for next signup will not be conflict
+     * */
     Optional<String> refreshTokenOptional = jwtService.readServletCookie(request,CONST.JWT_REFRESH_TOKEN_NAME);
     if(refreshTokenOptional.isPresent()){
       jwtService.removeCookie(CONST.JWT_REFRESH_TOKEN_NAME,response);

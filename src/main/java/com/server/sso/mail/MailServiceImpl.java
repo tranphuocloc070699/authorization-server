@@ -1,7 +1,7 @@
 package com.server.sso.mail;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import com.server.sso.shared.Constant;
+import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -11,36 +11,39 @@ import org.thymeleaf.context.Context;
 import jakarta.mail.internet.MimeMessage;
 
 @Service
-public class EmailServiceImpl implements EmailService {
+@RequiredArgsConstructor
+public class MailServiceImpl implements MailService {
+  private final JavaMailSender javaMailSender;
+  private final TemplateEngine templateEngine;
+  private final Constant CONST;
 
-  @Value("${spring.mail.username}")
-  private String fromEmail;
-
-  @Autowired
-  private JavaMailSender javaMailSender;
-
-  @Autowired
-  TemplateEngine templateEngine;
-
+  /*
+  * Uses: Send mail to specific mail
+  * */
   @Override
-  public String sendMail( String to, String subject,String confirmationLink) {
+  public void sendMail( String to, String subject,String confirmationLink) {
     try {
       MimeMessage mimeMessage = javaMailSender.createMimeMessage();
       MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
-      mimeMessageHelper.setFrom(fromEmail);
+      mimeMessageHelper.setFrom(CONST.MAIL_USERNAME);
       mimeMessageHelper.setTo(to);
       mimeMessageHelper.setSubject(subject);
-      String htmlContent = loadTemplate("mail-confirmation", confirmationLink,"http://localhost:8080");
+
+      String templateName = "main-confirmation";
+      String htmlContent = loadTemplate(templateName, confirmationLink,CONST.APP_DOMAIN);
       mimeMessageHelper.setText(htmlContent,true);
       javaMailSender.send(mimeMessage);
-      return "mail send";
+
     } catch (Exception e) {
+      System.err.println("[MailService-sendMail] Internal Server Error " + e.getMessage());
       throw new RuntimeException(e);
     }
-
-
   }
 
+  /*
+  * Uses: Load template from resources/templates and convert to String
+  * Notes: Thymeleaf config (prefix,suffix) in Thymeleaf Configuration
+  * */
   public String loadTemplate(String templateName, String confirmationLink,String serverLink) {
     Context context = new Context();
     context.setVariable("confirmationLink", confirmationLink);
@@ -49,6 +52,7 @@ public class EmailServiceImpl implements EmailService {
     try {
       return templateEngine.process(templateName, context);
     } catch (Exception e) {
+      System.err.println("[MailService-loadTemplate] Internal Server Error " + e.getMessage());
       throw new RuntimeException("Error loading template", e);
     }
   }
