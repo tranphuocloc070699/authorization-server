@@ -1,0 +1,65 @@
+# Postgresql Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/your-db
+spring.datasource.username=
+spring.datasource.password=
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.properties.format-sql=true
+spring.jpa.show-sql=false
+
+# Redis Database Configuration
+app.redis.host-name=localhost
+app.redis.port=6379
+
+#Spring Error Configuration
+spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.web.ErrorMvcAutoConfiguration
+server.error.path=/error
+
+#Spring Security
+#JWT Configuration
+spring.jpa.logging.level.org.springframework.security=TRACE
+application.security.jwt.secret-key=PJC7HnliwcxXw4FM8Ep3sX9NIL3R5CZnDvp8IyyCSlg=
+server.servlet.session.timeout=30m
+#1 hour
+application.security.jwt.expiration=3600000
+application.security.jwt.refresh-token.expiration=360000000
+application.security.jwt.refresh-token.name=refresh-token
+
+# Oauth2 Google Login Configuration
+spring.security.oauth2.client.registration.google.client-id=
+spring.security.oauth2.client.registration.google.client-secret=
+spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:8080/login/oauth2/code/google
+spring.security.oauth2.client.registration.google.authorization-uri=https://accounts.google.com/o/oauth2/auth
+spring.security.oauth2.client.registration.google.token-uri=https://accounts.google.com/o/oauth2/token
+spring.security.oauth2.client.registration.google.user-info-uri=https://www.googleapis.com/oauth2/v3/userinfo
+spring.security.oauth2.client.registration.google.scope=openid,profile,email
+
+#Spring Mail
+spring.mail.host=smtp.gmail.com
+spring.mail.username=
+spring.mail.password=
+spring.mail.port=587
+spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.auth=true
+
+
+#Spring RabbitMQ Connect Configuration
+spring.rabbitmq.host=rabbitmq-server
+#spring.rabbitmq.host=localhost
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=guest
+spring.rabbitmq.password=guest
+#Spring RabbitMQ  Variables
+app.rabbitmq.exchange=sso_exchange
+app.rabbitmq.db.queue=sso_db_queue
+app.rabbitmq.db.routing-key=sso_db_routing_key
+app.rabbitmq.mail.queue=sso_mail_queue
+app.rabbitmq.mail.routing-key=sso_mail_routing_key
+
+#Custom
+app.domain=http://localhost:8080
+app.2fa.label=MFA
+app.2fa.issuer=SSO
+
+
+
