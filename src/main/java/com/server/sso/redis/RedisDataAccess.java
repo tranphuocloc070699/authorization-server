@@ -2,6 +2,7 @@ package com.server.sso.redis;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -13,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 public class RedisDataAccess {
   public static final String HASH_KEY = "User";
 
-  private final RedisTemplate template;
+  private final RedisTemplate<Object,Object> template;
 
 
   /*
@@ -21,7 +22,11 @@ public class RedisDataAccess {
   * Uses: Find all cached user
   * */
   public List<RedisUser> findAll(){
-    return template.opsForHash().values(HASH_KEY);
+    List<Object> redisUserObjects = template.opsForHash().values(HASH_KEY);
+    // Convert List<Object> to List<RedisUser>
+    return redisUserObjects.stream()
+        .map(object -> (RedisUser) object)
+        .collect(Collectors.toList());
   }
 
   /*
@@ -55,11 +60,10 @@ public class RedisDataAccess {
    * Uses: Save temporary user
    * Notes: For signup verify, auto delete when user signup but not confirm mail
    * */
-  public RedisUser saveTemporary(String key ,RedisUser user,Integer ttl){
+  public void saveTemporary(String key ,RedisUser user,Integer ttl){
         if(ttl==null) ttl = 60;
         template.opsForValue().set(key,user);
         template.expire(key,ttl, TimeUnit.SECONDS);
-    return user;
   }
 
   /*
@@ -67,8 +71,8 @@ public class RedisDataAccess {
    * Uses: Delete temporary user
    * Notes: When signup successfully
    * */
-  public Boolean deleteUserTemporary(String key){
-   return  template.delete(key);
+  public void deleteUserTemporary(String key){
+     template.delete(key);
   }
 
   /*

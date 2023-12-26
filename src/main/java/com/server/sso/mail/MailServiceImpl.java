@@ -29,7 +29,7 @@ public class MailServiceImpl implements MailService {
       mimeMessageHelper.setTo(to);
       mimeMessageHelper.setSubject(subject);
 
-      String templateName = "main-confirmation";
+      String templateName = "mail-confirmation";
       String htmlContent = loadTemplate(templateName, confirmationLink,CONST.APP_DOMAIN);
       mimeMessageHelper.setText(htmlContent,true);
       javaMailSender.send(mimeMessage);

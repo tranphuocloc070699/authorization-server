@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+  db:
+    container_name: postgres-db
+    image: postgres:15.3
+    environment:
+      POSTGRES_USER: loctran
+      POSTGRES_PASSWORD: Loc123456
+      PGDATA: /data/postgres
+      RABBITMQ_HOST: rabbitmq-server
+      REDIS_HOST: redis-server
+    volumes:
+      - db:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - sso
+    restart: unless-stopped
+
+  redis:
+    container_name: redis-server
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - sso
+    restart: unless-stopped
+
+  rabbitmq:
+    container_name: rabbitmq-server
+    image: rabbitmq:3.13.0-rc.3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - sso
+    restart: unless-stopped
+
+  sso-server:
+    container_name: server
+    image: loctran070699/sso
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/sso
+    ports:
+      - "8080:8080"
+    networks:
+      - sso
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+
+networks:
+  sso:
+    driver: bridge
+
+volumes:
+  db:

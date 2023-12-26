@@ -38,10 +38,10 @@ public class Constant {
   /*
   * Redis
   */
-  @Value("{app.redis.host-name}")
+  @Value("${app.redis.host-name}")
   public String REDIS_HOST_NAME;
-  @Value("{app.redis.port}")
-  public Integer REDIS_PORT;
+  @Value("${app.redis.port}")
+  public String REDIS_PORT;
 
   /*
   * Mail
