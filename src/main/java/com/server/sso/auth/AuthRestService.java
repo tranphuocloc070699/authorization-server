@@ -1,7 +1,7 @@
 package com.server.sso.auth;
 
-import com.server.sso.exception.customs.ForbiddenException;
-import com.server.sso.exception.customs.UnAuthenticateException;
+import com.server.sso.errors.customs.ForbiddenException;
+import com.server.sso.errors.customs.UnAuthenticateException;
 import com.server.sso.redis.RedisDataAccess;
 import com.server.sso.redis.RedisUser;
 import com.server.sso.security.JwtService;
@@ -10,20 +10,32 @@ import com.server.sso.security.multiFactor.MFATokenData;
 import com.server.sso.shared.AuthResponseException;
 import com.server.sso.shared.Constant;
 import com.server.sso.shared.ExtractData;
+import com.server.sso.shared.ValidateData;
+import com.server.sso.user.Role;
 import com.server.sso.user.User;
 import com.server.sso.user.UserDataAccess;
 import dev.samstevens.totp.exceptions.QrGenerationException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -116,7 +128,6 @@ public class AuthRestService {
    * Case: All thing good!!!
    *      - Case: Enable 2FA:
    *         - Generate QR code and mfa code
-   *         - update user and user redis
    *         - return response data
    *      - Case: Disable 2FA:
    *         - update user and user redis
@@ -157,19 +168,21 @@ public class AuthRestService {
             .accessToken(null)
             .build());
       } else {
-        /*Enable using2Fa*/
-        userExisting.setIsUsing2FA(true);
-        userExisting.setSecret(defaultMFATokenManager.generateSecretKey());
-        redisUser.setIsUsing2FA(true);
-        redisUser.setSecret(defaultMFATokenManager.generateSecretKey());
+        String secret = defaultMFATokenManager.generateSecretKey();
+        /*Get qr code */
+//        userExisting.setIsUsing2FA(true);
+        userExisting.setSecret(secret);
+//        redisUser.setIsUsing2FA(true);
+        redisUser.setSecret(secret);
         redisDataAccess.save(redisUser);
         userDataAccess.save(userExisting);
-        MFATokenData data = new MFATokenData(defaultMFATokenManager.getQRCode(userExisting.getSecret(), userExisting.getEmail()),
-            userExisting.getSecret());
+
+        MFATokenData data = new MFATokenData(defaultMFATokenManager.getQRCode(secret, userExisting.getEmail()),
+            secret);
         return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
             .status(HttpStatus.OK)
             .data(data)
-            .message("enable multi factor authenticate successfully!")
+            .message("Get Qr code successfully!")
             .path(null)
             .accessToken(null)
             .build());
@@ -181,6 +194,116 @@ public class AuthRestService {
     } catch (RuntimeException e) {
       return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
+  }
+
+  /*
+   * Uses: Verify OTP of Google Authenticator App from user
+   * Case: Authentication == null:
+   *      - Return specific error
+   * Case: OTP not a number:
+   *      - Return specific error
+   * Case: Cannot extract user email from authentication:
+   *      - Return specific error
+   * Case: Non-exist user or redis user:
+   *      - Return specific error
+   * Case: Non-value user secret:
+   *      - Return specific error
+   * Case: VerifyTopt fail:
+   *      - Return specific error
+   * Case: All thing good!!!
+   *      - Update user and redis user
+   *      - Return response data
+   * */
+  public ResponseEntity<AuthResponse> verifyMultiFactorInDashboardPageToEnable2FA(Authentication authentication,  String numberDigits,
+                                  HttpServletRequest request
+                                  )  {
+
+    if (authentication == null) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(AuthResponse.builder()
+          .status(HttpStatus.FORBIDDEN)
+          .data(null)
+          .message("Authentication null")
+          .path(request.getServletPath())
+          .accessToken(null)
+          .build());
+    }
+
+
+    if(!ValidateData.isValidLong(numberDigits)){
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(AuthResponse.builder()
+          .status(HttpStatus.BAD_REQUEST)
+          .data(null)
+          .message("Code Invalid")
+          .path(request.getServletPath())
+          .accessToken(null)
+          .build());
+    }
+    String userEmail = ExtractData.getName(authentication);
+    if (userEmail == null || userEmail.isEmpty()) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AuthResponse.builder()
+          .status(HttpStatus.UNAUTHORIZED)
+          .data(null)
+          .message("Cannot extract user email from authentication")
+          .path(request.getServletPath())
+          .accessToken(null)
+          .build());
+    }
+
+    Optional<User> userOptional = userDataAccess.findByEmail(userEmail);
+    RedisUser redisUser = redisDataAccess.findRedisUserByEmail(userEmail);
+    if(userOptional.isEmpty()) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AuthResponse.builder()
+          .status(HttpStatus.UNAUTHORIZED)
+          .data(null)
+          .message("User not found with email:" + userEmail)
+          .path(request.getServletPath())
+          .accessToken(null)
+          .build());
+    }
+    if(redisUser==null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AuthResponse.builder()
+          .status(HttpStatus.UNAUTHORIZED)
+          .data(null)
+          .message("Redis user not found with email:" + userEmail)
+          .path(request.getServletPath())
+          .accessToken(null)
+          .build());
+    }
+
+    User userExisting = userOptional.get();
+
+    if(userExisting.getSecret()==null || userExisting.getSecret().isEmpty()) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AuthResponse.builder()
+          .status(HttpStatus.UNAUTHORIZED)
+          .data(null)
+          .message(" User secret not found" + userEmail)
+          .path(request.getServletPath())
+          .accessToken(null)
+          .build());
+    }
+    System.out.println("userExisting secret:" + userExisting.getSecret());
+    if(!defaultMFATokenManager.verifyTotp(numberDigits,userExisting.getSecret())){
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(AuthResponse.builder()
+          .status(HttpStatus.BAD_REQUEST)
+          .data(null)
+          .message("Verify failure! please enter the code on your Google Authenticator App.")
+          .path(request.getServletPath())
+          .accessToken(null)
+          .build());
+    }
+
+    userExisting.setIsUsing2FA(true);
+    redisUser.setIsUsing2FA(true);
+    redisDataAccess.save(redisUser);
+    userDataAccess.save(userExisting);
+
+    return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
+        .status(HttpStatus.OK)
+        .data(null)
+        .message("Enable Multi Factor Authenticate successfully!")
+        .path(request.getServletPath())
+        .accessToken(null)
+        .build());
   }
 
   /*
@@ -221,7 +344,7 @@ public class AuthRestService {
     } catch (UnAuthenticateException | JwtException e) {
       return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.UNAUTHORIZED, e.getMessage());
     } catch (RuntimeException e) {
-      System.err.println("[authenticate] internal server error :" + e.getMessage());
+
       return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }

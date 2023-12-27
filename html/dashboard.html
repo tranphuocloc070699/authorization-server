@@ -107,6 +107,15 @@
             <p class="dashboard-modal-body-notice center">Or enter this key</p>
             <p id="qrCodeKey" class="dashboard-modal-body-title center" >ABCXYZ123456789</p>
           </div>
+          <div class="dashboard-modal-footer">
+            <p class="dashboard-modal-body-verify-title">Please verify OTP on your Google Authenticator App</p>
+            <p class="dashboard-modal-body-verify-error" id="qrCodeVerifyError"></p>
+            <div class="dashboard-modal-footer-verify-container">
+              
+              <input id="qrCodeInput" inputmode="numeric" type="number" placeholder="Ex:123456">
+            <button id="btnCodeVerify">VERIFY</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -137,7 +146,6 @@
 
         //button save changes clicked
         $('#toggleMultiFa').click(function (e) {
-  
 
           //Because before checkbox change , old value is opposite 
           const isChecked = $('#multiFaCheckbox').prop('checked')

@@ -32,6 +32,7 @@ public class AuthController {
   @GetMapping("/login")
   public String loginView(@Param("redirectUrl") String redirectUrl,
                           HttpSession session,
+      Model model,
       Authentication authentication) {
     return authService.loginView(authentication, session, redirectUrl);
   }

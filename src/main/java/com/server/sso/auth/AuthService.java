@@ -218,7 +218,7 @@ public class AuthService {
     }
 
     if(!ValidateData.isValidLong(numberDigits)){
-      model.addAttribute("verifyError","code invalid");
+      model.addAttribute("verifyError","Code invalid");
       return "verify-multi-factor";
     }
     String userEmail = ExtractData.getName(authentication);

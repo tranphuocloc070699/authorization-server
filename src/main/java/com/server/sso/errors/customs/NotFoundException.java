@@ -1,4 +1,4 @@
-package com.server.sso.exception.customs;
+package com.server.sso.errors.customs;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

@@ -49,4 +49,11 @@ public class AuthRestController {
   public Object enable2Fa(Authentication authentication, Model model){
     return authRestService.toggle2Fa(authentication,model);
   }
+
+
+  @PostMapping("2fa/verify-for-dashboard-page")
+  public ResponseEntity<AuthResponse> verifyMultiFactorInDashboardPageToEnable2FA(Authentication authentication,@RequestParam("numberDigits") String numberDigits,HttpServletRequest request){
+
+    return authRestService.verifyMultiFactorInDashboardPageToEnable2FA(authentication, numberDigits,request);
+  }
 }

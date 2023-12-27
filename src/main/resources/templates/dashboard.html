@@ -29,71 +29,6 @@
   </head>
 </html>
 </head>
-<!--<body>-->
-<!--<h2>Current User:</h2>-->
-<!--<p th:text="${user}"></p>-->
-<!--<br>-->
-<!--<h2>User List:</h2>-->
-<!--&lt;!&ndash; <ul>&ndash;&gt;-->
-<!--&lt;!&ndash;    <li th:each="user : ${userList}">&ndash;&gt;-->
-<!--&lt;!&ndash;        <p th:text="${user}"></p>&ndash;&gt;-->
-<!--&lt;!&ndash;    </li>&ndash;&gt;-->
-<!--&lt;!&ndash;</ul> &ndash;&gt;-->
-<!--&lt;!&ndash;<p th:if="${isUse2FA==true}">Using 2FA</p>&ndash;&gt;-->
-<!--<button  id="toggle-2fa__btn">Test 2fa</button>-->
-<!--<img id="qr-code" src="" alt="Girl in a jacket" >-->
-<!--<br>-->
-<!--<p id="mfa-code"></p>-->
-
-<!--<div>&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;</div>-->
-
-<!--&lt;!&ndash;<div class="otp-field mb-4">&ndash;&gt;-->
-<!--&lt;!&ndash;  <input type="number" />&ndash;&gt;-->
-<!--&lt;!&ndash;  <input type="number" disabled />&ndash;&gt;-->
-<!--&lt;!&ndash;  <input type="number" disabled />&ndash;&gt;-->
-<!--&lt;!&ndash;  <input type="number" disabled />&ndash;&gt;-->
-<!--&lt;!&ndash;  <input type="number" disabled />&ndash;&gt;-->
-<!--&lt;!&ndash;  <input type="number" disabled />&ndash;&gt;-->
-<!--&lt;!&ndash;</div>&ndash;&gt;-->
-<!--<input id="number-digits" placeholder="enter number" >-->
-<!--<button id="verify__btn" >Verify</button>-->
-
-<!--<script type="text/javascript">-->
-<!--  $(document).ready(function () {-->
-<!--    $("#toggle-2fa__btn").on("click", function () {-->
-<!--        const url = "[[@{/auth/2fa}]]";-->
-<!--        $.ajax({-->
-<!--            url,-->
-<!--            type: 'GET',-->
-<!--            dataType: 'json',-->
-<!--            success: function (response) {-->
-<!--                if(response.data.mfaCode && response.data.qrCode){-->
-<!--                    $('#qr-code').attr('src', response.data.qrCode);-->
-<!--                    $('#mfa-code').text(response.data.mfaCode);-->
-<!--                }-->
-<!--            },-->
-<!--            error: function (error) {-->
-<!--                console.error('Error:', error);-->
-<!--            }-->
-<!--        });-->
-<!--    });-->
-
-<!--$("#verify__btn").on("click", function () {-->
-<!--    console.log('1231231312');-->
-<!--        const numberValue = $('#number-digits').val();-->
-<!--        const url = "[[@{/auth/verify2fa}]]";-->
-
-<!--        params = { numberValue};-->
-<!--        $.post(url, params, function (response) {-->
-<!--            console.log({response})-->
-<!--          }).fail(function () {-->
-<!--            console.error('can not connect to server')-->
-<!--          });-->
-<!--    });-->
-<!--  });-->
-<!--</script>-->
-<!--</body>-->
-
 <body>
 <div class="dashboard-wrapper">
   <div class="container dashboard-wrapper-container">
@@ -188,6 +123,15 @@
         <p class="dashboard-modal-body-notice center">Or enter this key</p>
         <p id="qrCodeKey" class="dashboard-modal-body-title center" ></p>
       </div>
+      <div class="dashboard-modal-footer">
+        <p class="dashboard-modal-body-verify-title">Please verify OTP on your Google Authenticator App</p>
+
+        <p class="dashboard-modal-body-verify-error" id="qrCodeVerifyError"></p>
+        <div class="dashboard-modal-footer-verify-container">
+          <input id="qrCodeInput" inputmode="numeric" placeholder="Ex:123456" type="number">
+          <button id="btnCodeVerify">VERIFY</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -218,8 +162,6 @@
 
     //button save changes clicked
     $('#toggleMultiFa').click(function (e) {
-
-
       //Because before checkbox change , old value is opposite
       const isChecked = $('#multiFaCheckbox').prop('checked')
       const url = "[[@{/auth/2fa/toggle}]]";
@@ -257,15 +199,41 @@
 
             }
         });
-
-
-
       }
 
-      $('#multiFaCheckbox').prop('checked',!isChecked);
       $('#confirmMultiFaModal').modal('hide');
-
     });
+
+    $('#btnCodeVerify').click(function(e){
+      const url = "[[@{/auth/2fa/verify-for-dashboard-page}]]";
+      const numberDigits = $('#qrCodeInput').val();
+      const formData = new FormData();
+
+    formData.append('numberDigits', numberDigits);
+
+      $.ajax({
+        url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+            if(response?.status=='OK'){
+             $('#multiFaCheckbox').prop('checked',true);
+             $('#qrModal').modal('hide');
+            }
+        },
+        error: function (error) {
+            console.error('Error:', error?.responseJSON?.message);
+            if(error?.responseJSON?.message){
+              $('#qrCodeVerifyError').text(error?.responseJSON?.message);
+            }
+        }
+    });
+    })
+    $('#qrCodeInput').change(function() {
+      $('#qrCodeVerifyError').text('');
+  });
 });
 </script>
 </body>

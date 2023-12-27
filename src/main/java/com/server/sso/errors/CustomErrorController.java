@@ -1,4 +1,4 @@
-package com.server.sso.exception;
+package com.server.sso.errors;
 
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.stereotype.Controller;
