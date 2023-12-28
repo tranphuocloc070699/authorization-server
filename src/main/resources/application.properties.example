@@ -1,5 +1,5 @@
 # Postgresql Database Configuration
-spring.datasource.url=jdbc:postgresql://db:5432/your-db
+spring.datasource.url=jdbc:postgresql://postgres-db:5432/your-db
 spring.datasource.username=
 spring.datasource.password=
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
