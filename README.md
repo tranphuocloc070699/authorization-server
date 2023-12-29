@@ -13,18 +13,18 @@ Video
 - RabbitMQ
 ## Diagram
 
-## Running on local
+## Running local
 1. Clone the project
 ```
 git clone https://github.com/tranphuocloc070699/authorization-server
 ```
 2. Run Postgresql with docker
 ```
-docker run --name pg -e POSTGRES_USER=your-pg-username -e POSTGRES_PASSWORD=your-pg-password -p 5432:5432 -v db:/var/lib/postgresql/data -d postgres
+docker run --name your-pg-container -e POSTGRES_USER=your-pg-username -e POSTGRES_PASSWORD=your-pg-password -p 5432:5432 -v db:/var/lib/postgresql/data -d postgres
 ```
 3. Create your database inside postgres container
 ```
-docker exec -it your-pg-container psql -U your-username
+docker exec your-pg-container createdb -U your-pg-username your-database-you-want-to-create
 ```
 4. Run Redis with Docker
 ```
@@ -39,6 +39,7 @@ docker run --name rabbitmq-server -p 5672:5672 -p 15672:15672 -d rabbitmq:manage
 
 7. Add properties's value to ``application.properties`` file
 ```
+	 spring.datasource.url=jdbc:postgresql://localhost:5432/your-database-you-created
 	 spring.datasource.username=your-pg-username
 	 spring.datasource.password=your-pg-password
 	 spring.security.oauth2.client.registration.google.client-id=
