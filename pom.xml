@@ -16,7 +16,8 @@
 	<properties>
 		<java.version>17</java.version>
 		<jjwt.version>0.12.3</jjwt.version>
-		<docker.username>loctran070699</docker.username>
+		<docker.username></docker.username>
+		<docker.password></docker.password>
 		<docker.image.name>sso</docker.image.name>
 		<docker.image.tag>latest</docker.image.tag>
 	</properties>
@@ -231,8 +232,8 @@
 					<to>
 						<image>docker.io/${docker.username}/${docker.image.name}:${docker.image.tag}</image>
 						<auth>
-							<username>loctran070699</username>
-							<password>Loc@#0774917635</password>
+							<username>${docker.username}</username>
+							<password>${docker.password}</password>
 						</auth>
 						<!--						<tags>-->
 						<!--							<tag>latest</tag>-->

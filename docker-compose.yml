@@ -42,7 +42,9 @@ services:
     container_name: server
     image: loctran070699/sso
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/sso
+     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/sso
+     - DOCKER_USERNAME=loctran070699
+     - DOCKER_PASSWORD=Loc@#0774917635
     ports:
       - "8080:8080"
     networks:
@@ -52,6 +54,8 @@ services:
       - redis
       - rabbitmq
     restart: unless-stopped
+
+
 
 networks:
   sso:
