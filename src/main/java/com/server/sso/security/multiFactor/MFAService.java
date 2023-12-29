@@ -24,12 +24,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class MFAService {
   private final Constant CONST;
-  public  SecretGenerator secretGenerator = new SecretGenerator() {
-    @Override
-    public String generate() {
-      return RandomData.generateRandomBase32();
-    }
-  };
+  public  SecretGenerator secretGenerator = RandomData::generateRandomBase32;
   public  QrGenerator qrGenerator = new QrGenerator() {
     @Override
     public String getImageMimeType() {
@@ -51,15 +46,12 @@ public class MFAService {
     }
   };
 
-  public CodeVerifier codeVerifier = new CodeVerifier() {
-    @Override
-    public boolean isValidCode(String code, String secret) {
-      GoogleAuthenticator gAuth = new GoogleAuthenticator();
-      // Create a GoogleAuthenticatorKey using the user's secret key
-      GoogleAuthenticatorKey key = new GoogleAuthenticatorKey.Builder(secret).build();
-      long allowedTimeDrift =  30 * 1000;
-      // Verify the user-entered TOTP
-      return gAuth.authorize(key.getKey(), Integer.parseInt(code),System.currentTimeMillis()+allowedTimeDrift);
-    }
+  public CodeVerifier codeVerifier = (code, secret) -> {
+    GoogleAuthenticator gAuth = new GoogleAuthenticator();
+    // Create a GoogleAuthenticatorKey using the user's secret key
+    GoogleAuthenticatorKey key = new GoogleAuthenticatorKey.Builder(secret).build();
+    long allowedTimeDrift =  30 * 1000;
+    // Verify the user-entered TOTP
+    return gAuth.authorize(key.getKey(), Integer.parseInt(code),System.currentTimeMillis()+allowedTimeDrift);
   };
 }

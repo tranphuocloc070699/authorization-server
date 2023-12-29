@@ -45,7 +45,7 @@ public class DefaultMFATokenManager implements MFATokenManager {
   public String getQRCode(String secret,String email) throws QrGenerationException {
     QrData data = new QrData.Builder().label(CONST.APP_2FA_LABEL)
         .secret(secret)
-        .issuer(CONST.APP_2FA_ISSUER+email)
+        .issuer(email)
         .algorithm(HashingAlgorithm.SHA256)
         .digits(6)
         .period(30)

@@ -281,7 +281,6 @@ public class AuthRestService {
           .accessToken(null)
           .build());
     }
-    System.out.println("userExisting secret:" + userExisting.getSecret());
     if(!defaultMFATokenManager.verifyTotp(numberDigits,userExisting.getSecret())){
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(AuthResponse.builder()
           .status(HttpStatus.BAD_REQUEST)
