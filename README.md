@@ -20,7 +20,7 @@ git clone https://github.com/tranphuocloc070699/authorization-server
 ```
 2. Run Postgresql with docker
 ```
-docker run --name your-pg-container -e POSTGRES_USER=your-pg-username -e POSTGRES_PASSWORD=your-pg-password -p 5432:5432 -v db:/var/lib/postgresql/data -d postgres
+docker run --name your-pg-container -e POSTGRES_USER=your-pg-username -e POSTGRES_PASSWORD=your-pg-password -p 5432:5432 -d postgres
 ```
 3. Create your database inside postgres container
 ```
