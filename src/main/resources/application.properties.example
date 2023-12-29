@@ -1,5 +1,5 @@
 # Postgresql Database Configuration
-spring.datasource.url=jdbc:postgresql://postgres-db:5432/your-db
+spring.datasource.url=jdbc:postgresql://localhost:5432/your-db
 spring.datasource.username=
 spring.datasource.password=
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
@@ -8,7 +8,7 @@ spring.jpa.properties.format-sql=true
 spring.jpa.show-sql=false
 
 # Redis Database Configuration
-app.redis.host-name=redis-server
+app.redis.host-name=localhost
 app.redis.port=6379
 
 #Spring Error Configuration
@@ -44,8 +44,7 @@ spring.mail.properties.mail.smtp.auth=true
 
 
 #Spring RabbitMQ Connect Configuration
-spring.rabbitmq.host=rabbitmq-server
-#spring.rabbitmq.host=localhost
+spring.rabbitmq.host=localhost
 spring.rabbitmq.port=5672
 spring.rabbitmq.username=guest
 spring.rabbitmq.password=guest
