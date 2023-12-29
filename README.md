@@ -32,7 +32,7 @@ docker run --name redis-server -p 6379:6379 -d redis:latest
 ```
 5. Run RabbitMQ with Docker
 ```
-docker run --name rabbitmq-server -p 5672:5672 -p 15672:15672 -d rabbitmq:management
+docker run --name rabbitmq-server -p 5672:5672 -p 15672:15672 -d rabbitmq:3.13.0-rc.3-management
 ```
 
 6. Rename ``application.properties.example`` file to ``application.properties``
