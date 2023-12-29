@@ -56,24 +56,13 @@ How to get gmail-password? [Click Here](https://www.youtube.com/watch?v=OdQ3GyBs
 ```
 git clone https://github.com/tranphuocloc070699/authorization-server
 ```
-2. Rename ``application.properties.example`` file to ``application.properties``
-
-3. Add properties's value to ``application.properties`` file
+2. navigate to project
 ```
-	 spring.datasource.username=your-pg-username
-	 spring.datasource.password=your-pg-password
-	 spring.security.oauth2.client.registration.google.client-id=
-	 spring.security.oauth2.client.registration.google.client-secret=
-	 spring.mail.username=your-gmail-account
-	 spring.mail.password=your-gmail-password
+cd ./authorization-server
 ```
-How to get google client-id and secret?[Click Here](https://www.youtube.com/watch?v=OKMgyF5ezFs)
-
-How to get gmail-password? [Click Here](https://www.youtube.com/watch?v=OdQ3GyBsdAA) (18:50 -> 21:33)
-
-4. Run docker compose
+3. run docker compose
 ```
 docker compose up
 ```
-5. Access ``http://localhost:8080``
+4. Access ``http://localhost:8080``
 
