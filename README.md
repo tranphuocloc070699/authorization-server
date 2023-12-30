@@ -1,7 +1,7 @@
 
 # Authorization server with SSO features
 Real world Authorization server to hand on Single Sign On
-## Demo
+## Video Demo
 [Click Here](https://www.youtube.com/watch?v=ssLSv74nEqU)
 ## Technologies
 - Spring Security + OAuth2
