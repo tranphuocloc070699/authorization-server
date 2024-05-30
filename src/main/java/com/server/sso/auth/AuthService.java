@@ -68,11 +68,16 @@ public class AuthService {
    * Case: Authenticate!=null (already authenticate):
    *        - navigate to dashboard
    * */
-  public String signupView(Authentication authentication, Model model) {
+  public String signupView(Authentication authentication, Model model,String redirectUrl,HttpSession session) {
     if (authentication != null && authentication.isAuthenticated()) {
       return "redirect:/dashboard";
     }
+    
     AuthSignUpRequest user = new AuthSignUpRequest();
+    if (redirectUrl != null) {
+      user.setRedirectUrl(redirectUrl);
+      session.setAttribute("redirectUrl", redirectUrl);
+    }
     model.addAttribute("user", user);
     return "signup";
   }
@@ -118,8 +123,10 @@ public class AuthService {
                        AuthSignUpRequest user, Model model) {
     try {
       if (result.hasErrors()) {
+        
         return "signup"; // Return back to the form with error messages
       }
+    
       Optional<User> userExisted= userDataAccess.findByEmail(user.getEmail());
       if(userExisted.isPresent()){
         model.addAttribute("errorMessage","Email " + user.getEmail() + " Already exist");
@@ -145,10 +152,14 @@ public class AuthService {
 
         httpSession.setAttribute("email",redisUser.getEmail());
         String token = jwtService.generateToken(key);
+        String confirmationLink = CONST.APP_DOMAIN+ "/signup-success?token=" + token;
+        if (user.getRedirectUrl()!=null) {
+          confirmationLink = confirmationLink+"&redirectUrl="+user.getRedirectUrl();
+        }
         MailSenderDto dto = MailSenderDto.builder()
             .to(user.getEmail())
             .subject("Confirmation")
-            .confirmationLink(CONST.APP_DOMAIN+ "/signup-success?token=" + token)
+            .confirmationLink(confirmationLink)
             .build();
         rabbitMQMailProducer.sendMailRequest(dto);
       }
@@ -292,7 +303,7 @@ public class AuthService {
    * */
   public String signupSuccess(Authentication authentication,HttpSession httpSession,Model model, String token,
                                   HttpServletRequest request,
-                                  HttpServletResponse response) {
+                                  HttpServletResponse response,String redirectUrl) {
     if (token == null) {
       model.addAttribute("errorMessage","Sign up failure! Cannot get token from url");
       return "signup";
@@ -325,7 +336,7 @@ public class AuthService {
     rabbitMQDbProducer.sendSaveUserRequestToPostgres(userSave);
 
     /*Modify redis*/
-    redisUser.setId(userSave.getId());
+    redisUser.setId(userSave.getId().toString());
     redisDataAccess.deleteUserTemporary(key);
     redisDataAccess.save(redisUser);
 
@@ -344,7 +355,17 @@ public class AuthService {
     }
 //    model.addAttribute("email",newUser.getEmail());
     jwtService.writeCookie(redisUser.getRefreshTokenVersion(),newUser.getEmail(), response);
+    
+    
+    try {
+      System.out.println("before Redirect");
+      response.sendRedirect(redirectUrl != null ? redirectUrl : "/dashboard");
+    } catch (IOException e) {
+      System.err.println("[signupSuccess] sendRedirect error" + e.getMessage());
+      throw new RuntimeException(e);
+    }
+  return null;
 
-    return "redirect:/dashboard";
+//    return "redirect:/dashboard";
   }
 }

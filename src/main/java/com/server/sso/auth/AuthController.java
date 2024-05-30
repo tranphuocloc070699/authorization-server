@@ -43,8 +43,9 @@ public class AuthController {
    * Notes: Navigate to dashboard when authenticated
    * */
   @GetMapping("/signup")
-  public String signupView(Model model, Authentication authentication) {
-    return authService.signupView(authentication, model);
+  public String signupView(Model model, Authentication authentication,@Param("redirectUrl") String redirectUrl,HttpSession session) {
+
+    return authService.signupView(authentication, model,redirectUrl,session);
   }
 
   /*
@@ -83,10 +84,10 @@ public class AuthController {
    * Uses: Verify token from email
    * */
   @GetMapping("/signup-success")
-  public String signupSuccessView(Model model, @RequestParam("token") String token, HttpSession httpSession,
+  public String signupSuccessView(Model model, @RequestParam("token") String token,@RequestParam("redirectUrl") String redirectUrl, HttpSession httpSession,
       HttpServletRequest request,
       HttpServletResponse response, Authentication authentication) {
-    return authService.signupSuccess(authentication, httpSession, model, token, request, response);
+    return authService.signupSuccess(authentication, httpSession, model, token, request, response,redirectUrl);
   }
 
   /*

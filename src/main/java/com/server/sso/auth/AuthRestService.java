@@ -7,10 +7,7 @@ import com.server.sso.redis.RedisUser;
 import com.server.sso.security.JwtService;
 import com.server.sso.security.multiFactor.DefaultMFATokenManager;
 import com.server.sso.security.multiFactor.MFATokenData;
-import com.server.sso.shared.AuthResponseException;
-import com.server.sso.shared.Constant;
-import com.server.sso.shared.ExtractData;
-import com.server.sso.shared.ValidateData;
+import com.server.sso.shared.*;
 import com.server.sso.user.Role;
 import com.server.sso.user.User;
 import com.server.sso.user.UserDataAccess;
@@ -34,9 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -67,7 +62,7 @@ public class AuthRestService {
   *      - Write cookie to request
   *      - Return response data
   * */
-  public ResponseEntity<AuthResponse> authenticate(HttpServletRequest request,
+  public ResponseEntity<ResponseObject> authenticate(HttpServletRequest request,
                                                    HttpServletResponse response) {
     try {
       Optional<String> refreshTokenOptional = jwtService.readServletCookie(request, CONST.JWT_REFRESH_TOKEN_NAME);
@@ -81,6 +76,10 @@ public class AuthRestService {
           claims -> claims.get("refreshTokenVersion", Integer.class));
       RedisUser redisUserExisted = redisDataAccess.findRedisUserByEmail(userEmail);
       if (redisUserExisted == null) throw new UnAuthenticateException("[Redis] User with email [\" + userEmail + \"] not found\"");
+      
+      System.out.println("refreshTokenVersion from jwt: "+ refreshTokenVersion );
+      System.out.println("refreshTokenVersion from redis user: "+ redisUserExisted.getRefreshTokenVersion() );
+      
       if (refreshTokenVersion == null || !refreshTokenVersion.equals(redisUserExisted.getRefreshTokenVersion()))
         throw new UnAuthenticateException("[Redis] refresh token not match");
 
@@ -100,20 +99,23 @@ public class AuthRestService {
       redisDataAccess.save(redisUserExisted);
       jwtService.writeCookie(redisUserExisted.getRefreshTokenVersion(), userExisting.get().getEmail(), response);
 
-      return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
-          .status(HttpStatus.OK)
-          .data(userExisting.get())
+      Map<String,Object> map = new HashMap<>();
+      map.put("user",userExisting.get());
+      map.put("accessToken",jwtService.generateToken(userExisting.get().getEmail()));
+      
+      return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+          .status(HttpStatus.OK.value())
+          .data(map)
           .message("authenticated")
           .path(request.getServletPath())
-          .accessToken(jwtService.generateToken(userExisting.get().getEmail()))
           .build());
     } catch (ForbiddenException e) {
-      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.FORBIDDEN, e.getMessage());
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.FORBIDDEN.value(), e.getMessage());
     } catch (UnAuthenticateException | JwtException e) {
-      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.UNAUTHORIZED, e.getMessage());
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.UNAUTHORIZED.value(), e.getMessage());
     } catch (RuntimeException e) {
       System.err.println("[authenticate] internal server error :" + e.getMessage());
-      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
     }
   }
 
@@ -160,12 +162,11 @@ public class AuthRestService {
         redisUser.setSecret(null);
         redisDataAccess.save(redisUser);
         userDataAccess.save(userExisting);
-        return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
-            .status(HttpStatus.OK)
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+            .status(HttpStatus.OK.value())
             .data(null)
             .message("disable multi factor authenticate successfully!")
             .path(null)
-            .accessToken(null)
             .build());
       } else {
         String secret = defaultMFATokenManager.generateSecretKey();
@@ -179,20 +180,19 @@ public class AuthRestService {
 
         MFATokenData data = new MFATokenData(defaultMFATokenManager.getQRCode(secret, userExisting.getEmail()),
             secret);
-        return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
-            .status(HttpStatus.OK)
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+            .status(HttpStatus.OK.value())
             .data(data)
             .message("Get Qr code successfully!")
             .path(null)
-            .accessToken(null)
             .build());
       }
     } catch (ForbiddenException e) {
-      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.FORBIDDEN, e.getMessage());
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.FORBIDDEN.value(), e.getMessage());
     } catch (QrGenerationException e) {
-      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.BAD_REQUEST, e.getMessage());
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.BAD_REQUEST.value(), e.getMessage());
     } catch (RuntimeException e) {
-      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
     }
   }
 
@@ -214,80 +214,73 @@ public class AuthRestService {
    *      - Update user and redis user
    *      - Return response data
    * */
-  public ResponseEntity<AuthResponse> verifyMultiFactorInDashboardPageToEnable2FA(Authentication authentication,  String numberDigits,
+  public ResponseEntity<ResponseObject> verifyMultiFactorInDashboardPageToEnable2FA(Authentication authentication,  String numberDigits,
                                   HttpServletRequest request
                                   )  {
 
     if (authentication == null) {
-      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(AuthResponse.builder()
-          .status(HttpStatus.FORBIDDEN)
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ResponseObject.builder()
+          .status(HttpStatus.FORBIDDEN.value())
           .data(null)
           .message("Authentication null")
           .path(request.getServletPath())
-          .accessToken(null)
           .build());
     }
 
 
     if(!ValidateData.isValidLong(numberDigits)){
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(AuthResponse.builder()
-          .status(HttpStatus.BAD_REQUEST)
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
+          .status(HttpStatus.BAD_REQUEST.value())
           .data(null)
           .message("Code Invalid")
           .path(request.getServletPath())
-          .accessToken(null)
           .build());
     }
     String userEmail = ExtractData.getName(authentication);
     if (userEmail == null || userEmail.isEmpty()) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AuthResponse.builder()
-          .status(HttpStatus.UNAUTHORIZED)
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+          .status(HttpStatus.UNAUTHORIZED.value())
           .data(null)
           .message("Cannot extract user email from authentication")
           .path(request.getServletPath())
-          .accessToken(null)
           .build());
     }
 
     Optional<User> userOptional = userDataAccess.findByEmail(userEmail);
     RedisUser redisUser = redisDataAccess.findRedisUserByEmail(userEmail);
     if(userOptional.isEmpty()) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AuthResponse.builder()
-          .status(HttpStatus.UNAUTHORIZED)
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+          .status(HttpStatus.UNAUTHORIZED.value())
           .data(null)
           .message("User not found with email:" + userEmail)
           .path(request.getServletPath())
-          .accessToken(null)
           .build());
     }
     if(redisUser==null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AuthResponse.builder()
-          .status(HttpStatus.UNAUTHORIZED)
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+          .status(HttpStatus.UNAUTHORIZED.value())
           .data(null)
           .message("Redis user not found with email:" + userEmail)
           .path(request.getServletPath())
-          .accessToken(null)
           .build());
     }
 
     User userExisting = userOptional.get();
 
     if(userExisting.getSecret()==null || userExisting.getSecret().isEmpty()) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AuthResponse.builder()
-          .status(HttpStatus.UNAUTHORIZED)
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+          .status(HttpStatus.UNAUTHORIZED.value())
           .data(null)
           .message(" User secret not found" + userEmail)
           .path(request.getServletPath())
-          .accessToken(null)
           .build());
     }
     if(!defaultMFATokenManager.verifyTotp(numberDigits,userExisting.getSecret())){
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(AuthResponse.builder()
-          .status(HttpStatus.BAD_REQUEST)
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
+          .status(HttpStatus.BAD_REQUEST.value())
           .data(null)
           .message("Verify failure! please enter the code on your Google Authenticator App.")
           .path(request.getServletPath())
-          .accessToken(null)
           .build());
     }
 
@@ -296,12 +289,11 @@ public class AuthRestService {
     redisDataAccess.save(redisUser);
     userDataAccess.save(userExisting);
 
-    return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
-        .status(HttpStatus.OK)
+    return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+        .status(HttpStatus.OK.value())
         .data(null)
         .message("Enable Multi Factor Authenticate successfully!")
         .path(request.getServletPath())
-        .accessToken(null)
         .build());
   }
 
@@ -316,8 +308,10 @@ public class AuthRestService {
    * Case: All thing good!!!
    *     - return response data
    * */
-  public ResponseEntity<AuthResponse> getProfile(HttpServletRequest request, HttpServletResponse response) {
+  public ResponseEntity<ResponseObject> getProfile(HttpServletRequest request, HttpServletResponse response) {
     try {
+      
+      System.out.println("get profile calling");
       final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
       final String jwt;
       final String userEmail;
@@ -330,21 +324,23 @@ public class AuthRestService {
 
       Optional<User> userOptional = userDataAccess.findByEmail(userEmail);
       if (userOptional.isEmpty()) throw new UnAuthenticateException("User not found with this token");
-
-      return ResponseEntity.status(HttpStatus.OK).body(AuthResponse.builder()
-          .status(HttpStatus.OK)
-          .data(userOptional.get())
+      
+      Map<String,Object> map = new HashMap<>();
+      map.put("user",userOptional.get());
+      map.put("accessToken",jwtService.generateToken(userOptional.get().getEmail()));
+      return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
+          .status(HttpStatus.OK.value())
+          .data(map)
           .message("get profile successfully!")
           .path(request.getServletPath())
-          .accessToken(jwtService.generateToken(userOptional.get().getEmail()))
           .build());
     } catch (ForbiddenException e) {
-      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.FORBIDDEN, e.getMessage());
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.FORBIDDEN.value(), e.getMessage());
     } catch (UnAuthenticateException | JwtException e) {
-      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.UNAUTHORIZED, e.getMessage());
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.UNAUTHORIZED.value(), e.getMessage());
     } catch (RuntimeException e) {
 
-      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+      return AuthResponseException.responseBaseOnErrorStatus(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
     }
   }
 }

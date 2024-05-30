@@ -25,51 +25,6 @@
     <script th:src="@{/js/validator.js}"></script>
 </head>
 <body>
-<!--<form id="signup-form" method="post" role="form" th:action="@{/users/save}" th:object="${user}">-->
-<!--    <div class="form-group mb-3">-->
-<!--        <label class="form-label">Name</label>-->
-<!--        <input class="form-control"-->
-<!--               id="name"-->
-<!--               name="name"-->
-<!--               placeholder="Enter name"-->
-<!--               th:field="*{name}"-->
-<!--               type="text"-->
-<!--        />-->
-<!--        <p th:errors="*{name}" class="text-danger"-->
-<!--           th:if="${#fields.hasErrors('name')}">-->
-<!--        </p>-->
-<!--    </div>-->
-<!--    <div class="form-group mb-3">-->
-<!--        <label class="form-label">Email</label>-->
-<!--        <input class="form-control"-->
-<!--               id="email"-->
-<!--               name="email"-->
-<!--               placeholder="Enter email address"-->
-<!--               th:field="*{email}"-->
-<!--               type="email"-->
-<!--        />-->
-<!--        <p th:errors="*{email}" class="text-danger"-->
-<!--           th:if="${#fields.hasErrors('email')}">-->
-<!--        </p>-->
-<!--    </div>-->
-<!--    <div class="form-group mb-3">-->
-<!--        <label class="form-label">Password</label>-->
-<!--        <input class="form-control"-->
-<!--               id="password"-->
-<!--               name="password"-->
-<!--               placeholder="Enter password"-->
-<!--               th:field="*{password}"-->
-<!--               type="password"-->
-<!--        />-->
-<!--        <p th:errors="*{password}" class="text-danger"-->
-<!--           th:if="${#fields.hasErrors('password')}">-->
-<!--        </p>-->
-<!--    </div>-->
-
-<!--    <div class="form-group mb-3">-->
-<!--        <button class="btn btn-primary" type="submit">Register</button>-->
-<!--    </div>-->
-<!--</form>-->
 
 <div class="auth-wrapper">
     <div class="container auth-container">
@@ -83,7 +38,7 @@
                             <span>Log In Page</span>
                         </div>
                     </a>
-                    <p th:if="${errorMessage}" class="auth-server-error">th:text="${errorMessage}"</p>
+                    <p th:if="${errorMessage}" class="auth-server-error" th:text="${errorMessage}"></p>
                     <div class="form-group ">
                         <label for="name" class="form-label">Username</label>
                         <input id="name" name="name" type="text" placeholder="Enter something..." class="form-input"   th:field="*{name}">
@@ -104,7 +59,10 @@
                         <input id="password_confirmation" name="password_confirmation" type="password" placeholder="Enter something..."  class="form-input">
                         <span class="form-error__message"></span>
                     </div>
+
+                    <input id="redirectUrl" name="redirectUrl" type="hidden"   th:field="*{redirectUrl}">
                     <div class="auth-btn-submit signup">
+
                         <button >SIGN UP</button>
                     </div>
                     <div class="auth-separate"></div>

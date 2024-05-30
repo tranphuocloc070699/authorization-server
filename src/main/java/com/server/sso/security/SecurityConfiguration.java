@@ -47,7 +47,7 @@ public class SecurityConfiguration {
                     "/auth/**",
                     "/signup-instruction/**",
                     "/signup-success/**",
-                    "/verify-multi-factor/**")
+                    "/verify-multi- factor/**")
                 .permitAll()
                 .requestMatchers("/css/**",
                     "/js/**",
@@ -80,7 +80,7 @@ public class SecurityConfiguration {
 
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.addAllowedOrigin("*");
+    configuration.addAllowedOrigin("http://localhost:8000");
     configuration.addAllowedMethod("*");
     configuration.addAllowedHeader("*");
     configuration.setAllowCredentials(true);

@@ -34,30 +34,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(@NonNull HttpServletRequest request,
                                   @NonNull HttpServletResponse response,
                                   @NonNull FilterChain filterChain) throws ServletException, IOException, JwtException {
-    try{
-
-      if(request.getHeader("X-Rest-Api")!=null){
+    try {
+      
+      if (request.getHeader("X-Rest-Api") != null) {
         /*Rest Api */
-
-      }else{
+        System.out.println("Rest api calling");
+      } else {
         /*
-        * Read cookie
-        *   - Cookie exist
-        *     - True: Check Jwt (extractUsername,isTokenValid)
-        *       - Valid: get user from database (loadUserByUsername) & set user to Authenticate
-        *   doFilter
-        * */
-        Optional<String> refreshTokenOptional = jwtService.readServletCookie(request,CONST.JWT_REFRESH_TOKEN_NAME);
-        if(refreshTokenOptional.isPresent()){
+         * Read cookie
+         *   - Cookie exist
+         *     - True: Check Jwt (extractUsername,isTokenValid)
+         *       - Valid: get user from database (loadUserByUsername) & set user to Authenticate
+         *   doFilter
+         * */
+        Optional<String> refreshTokenOptional = jwtService.readServletCookie(request, CONST.JWT_REFRESH_TOKEN_NAME);
+        System.out.println("refreshTokenOptional" + refreshTokenOptional.get());
+        if (refreshTokenOptional.isPresent()) {
           String refreshToken = refreshTokenOptional.get();
           String userEmail = jwtService.extractUsername(refreshToken);
-          if(userEmail!=null && SecurityContextHolder.getContext().getAuthentication()==null) {
+          if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            if (userDetails!=null && jwtService.isTokenValid(refreshToken, userDetails)) {
+            if (userDetails != null && jwtService.isTokenValid(refreshToken, userDetails)) {
               UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                  userDetails,
-                  null,
-                  userDetails.getAuthorities()
+                      userDetails,
+                      null,
+                      userDetails.getAuthorities()
               );
               authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
               SecurityContextHolder.getContext().setAuthentication(authToken);
@@ -65,9 +66,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           }
         }
       }
-    }catch (UsernameNotFoundException exception){
+    } catch (UsernameNotFoundException exception) {
       System.err.println("JwtAuthenticationFilter Exception: " + exception.getMessage());
-      jwtService.removeCookie(CONST.JWT_REFRESH_TOKEN_NAME,response);
+      jwtService.removeCookie(CONST.JWT_REFRESH_TOKEN_NAME, response);
+    } catch (RuntimeException exception) {
+      System.err.println("doFilterInternal Exception: " + exception.getMessage());
     }
     filterChain.doFilter(request,response);
 

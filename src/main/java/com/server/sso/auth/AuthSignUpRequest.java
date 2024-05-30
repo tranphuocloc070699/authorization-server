@@ -24,4 +24,6 @@ public class AuthSignUpRequest {
   private String name;
 
   private Role role;
+  
+  private String redirectUrl;
 }

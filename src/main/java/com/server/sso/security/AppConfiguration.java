@@ -33,6 +33,7 @@ public class AppConfiguration {
     return username -> {
       Optional<User> userExisting = userDataAccess.findByEmail(username);
       if(userExisting.isPresent()){
+        System.out.println("password: " + userExisting.get().getPassword());
         return new org.springframework.security.core.userdetails.User(username,userExisting.get().getPassword(), userExisting.get().getAuthorities());
       }
       throw new UsernameNotFoundException("user with email ["+username+"] not found");

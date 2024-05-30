@@ -3,6 +3,7 @@ package com.server.sso.user;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -34,7 +35,7 @@ import lombok.NoArgsConstructor;
 public class User implements UserDetails {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  private String id;
+  private UUID id;
 
   @Column(nullable = false,unique = true)
   private String email;
@@ -51,7 +52,7 @@ public class User implements UserDetails {
   @Enumerated(EnumType.STRING)
   private Role role;
 
-  @Column(columnDefinition = "BOOLEAN DEFAULT false")
+  @Column(name = "is_using2fa",columnDefinition = "BOOLEAN DEFAULT false")
   private Boolean isUsing2FA;
 
   @Column

@@ -1,5 +1,6 @@
 package com.server.sso.auth;
 
+import com.server.sso.shared.ResponseObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
@@ -27,7 +28,7 @@ public class AuthRestController {
    * Uses: Get access token from refresh token
    * */
   @GetMapping("authenticate")
-  public ResponseEntity<AuthResponse> authenticate(HttpServletRequest request, HttpServletResponse response){
+  public ResponseEntity<ResponseObject> authenticate(HttpServletRequest request, HttpServletResponse response){
     return authRestService.authenticate(request,response);
   }
 
@@ -37,7 +38,7 @@ public class AuthRestController {
    * Notes: access token store in headers
    * */
   @GetMapping("profile")
-  public ResponseEntity<AuthResponse> getProfile(HttpServletRequest request, HttpServletResponse response){
+  public ResponseEntity<ResponseObject> getProfile(HttpServletRequest request, HttpServletResponse response){
     return authRestService.getProfile(request,response);
   }
 
@@ -52,7 +53,7 @@ public class AuthRestController {
 
 
   @PostMapping("2fa/verify-for-dashboard-page")
-  public ResponseEntity<AuthResponse> verifyMultiFactorInDashboardPageToEnable2FA(Authentication authentication,@RequestParam("numberDigits") String numberDigits,HttpServletRequest request){
+  public ResponseEntity<ResponseObject> verifyMultiFactorInDashboardPageToEnable2FA(Authentication authentication,@RequestParam("numberDigits") String numberDigits,HttpServletRequest request){
 
     return authRestService.verifyMultiFactorInDashboardPageToEnable2FA(authentication, numberDigits,request);
   }

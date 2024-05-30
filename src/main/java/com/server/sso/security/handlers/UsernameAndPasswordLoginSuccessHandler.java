@@ -28,11 +28,10 @@ public class UsernameAndPasswordLoginSuccessHandler implements AuthenticationSuc
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
       throws IOException, ServletException {
     String redirectUrl = (String) request.getSession().getAttribute("redirectUrl");
-
+    System.out.println(authentication.getName());
     RedisUser redisUser = redisDataAccess.findRedisUserByEmail(authentication.getName());
 
     if(redisUser==null){
-
       UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
           null,
           null

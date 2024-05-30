@@ -98,7 +98,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
       User userSaved = userDataAccess.save(newUser);
 
       RedisUser redisUser = RedisUser.builder()
-          .id(userSaved.getId())
+          .id(userSaved.getId().toString())
           .name(userSaved.getName())
           .email(userSaved.getEmail())
           .provider(userSaved.getProvider())

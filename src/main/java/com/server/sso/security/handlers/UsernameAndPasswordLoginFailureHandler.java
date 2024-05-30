@@ -25,8 +25,14 @@ public class UsernameAndPasswordLoginFailureHandler implements AuthenticationFai
         .map(entry -> entry.getKey() + "=" + Arrays.toString(entry.getValue()))
         .collect(Collectors.joining(", "));
 
-    System.err.println("[UsernameAndPasswordLoginFailureHandler] Login failed. Parameters: " + parameterString);
-    request.getSession().setAttribute("loginError", exception.getMessage());
+    System.err.println("[UsernameAndPasswordLoginFailureHandler] Login failed. Parameters: " + parameterString + "| Error: " + exception.getMessage());
+    
+    String exceptionMessage = exception.getMessage();
+    
+    if (exception.getMessage().equals("Cannot pass null or empty values to constructor")) {
+      exceptionMessage = "Bad credentials";
+    }
+    request.getSession().setAttribute("loginError", exceptionMessage);
     response.sendRedirect(request.getContextPath() + "/login?error");
   }
 }
