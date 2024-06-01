@@ -81,6 +81,8 @@ public class SecurityConfiguration {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
     configuration.addAllowedOrigin("http://localhost:8000");
+       configuration.addAllowedOrigin("https://sso.softsky.dev");
+
     configuration.addAllowedMethod("*");
     configuration.addAllowedHeader("*");
     configuration.setAllowCredentials(true);
